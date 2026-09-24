@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>মেইন মেনু - ভূমি উন্নয়ন কর</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; text-align: center; padding: 50px; }
+        .header-logo { width: 80px; margin-bottom: 20px; }
+        h1 { color: #006622; }
+        .card-container { display: flex; justify-content: center; gap: 30px; margin-top: 50px; flex-wrap: wrap; }
+        .card { background: white; padding: 40px 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 250px; text-decoration: none; color: black; border: 2px solid transparent; transition: 0.3s; }
+        .card:hover { border-color: #006622; transform: translateY(-5px); }
+        .card h2 { margin: 10px 0; color: #333; }
+        .card p { font-size: 14px; color: #666; line-height: 1.5; }
+        .icon { font-size: 40px; color: #006622; margin-bottom: 15px; }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <img src="/images/image_253414.png.png" alt="Logo" class="header-logo" onerror="this.style.display='none'">
+    <h1>অটোমেশন সিস্টেম</h1>
+    <p>নিচের যেকোনো একটি অপশন নির্বাচন করুন</p>
+
+    <div class="card-container">
+        <a href="/qr-generator.html" class="card">
+            <i class="fa-solid fa-qrcode icon"></i>
+            <h2>QR Generator</h2>
+            <p>আগে থেকে তৈরি করা PDF আপলোড করে QR কোড এবং লিংক তৈরি করুন।</p>
+        </a>
+
+        <a href="/file-maker.html" class="card">
+            <i class="fa-solid fa-file-invoice icon"></i>
+            <h2>File Making</h2>
+            <p>নতুন রসিদ ফর্ম পূরণ করে স্বয়ংক্রিয় QR কোডসহ PDF তৈরি করুন।</p>
+        </a>
+    </div>
+</body>
+</html>

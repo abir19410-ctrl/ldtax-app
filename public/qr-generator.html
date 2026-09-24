@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QR Generator</title>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 50px; background-color: #f9f9f9; }
+        .upload-box { border: 2px dashed #006622; padding: 40px; display: inline-block; background: white; border-radius: 10px; }
+        input[type="file"] { margin: 20px 0; }
+        button { padding: 12px 25px; background: #006622; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #004d1a; }
+        .back-btn { display: block; margin-bottom: 30px; text-decoration: none; color: #006622; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">← মেইন মেনুতে ফিরে যান</a>
+    <h2>PDF আপলোড করে QR কোড তৈরি করুন</h2>
+    <div class="upload-box">
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <label style="font-size: 18px;">আপনার PDF ফাইলটি নির্বাচন করুন:</label><br>
+            <input type="file" name="pdfFile" accept="application/pdf" required><br>
+            <button type="submit">Upload & Generate QR</button>
+        </form>
+    </div>
+</body>
+</html>

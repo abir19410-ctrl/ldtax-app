@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>File Maker - রসিদ তৈরি</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        body { font-family: 'Tiro Bangla', serif; background-color: #f0f2f5; margin: 0; padding: 20px; text-rendering: geometricPrecision; }
+        .no-print { text-align: center; margin-bottom: 20px; }
+        .no-print a { text-decoration: none; color: #006622; font-weight: bold; font-size: 16px; margin-right: 20px;}
+        .generate-btn { background-color: #006622; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .generate-btn:hover { background-color: #004d1a; }
+        .loading { display: none; color: #ff0000; font-weight: bold; margin-top: 10px; }
+
+        .paper-container { 
+            width: 794px; 
+            min-height: 1123px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 15px; 
+            box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2); 
+            color: #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dotted-wrapper {
+            border: 2px dotted #333;
+            padding: 20px 25px 10px 25px;
+            box-sizing: border-box;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-wrapper { flex-grow: 1; }
+
+        .dotted-field { border: none; border-bottom: 1.2px dotted #000; outline: none; padding: 0 6px; margin-left: 2px; display: inline-block; font-family: inherit; font-size: 13px; white-space: nowrap;}
+        .plain-editable { outline: none; display: inline-block; min-width: 30px; font-family: inherit; font-size: 13px; }
+        .table-edit { outline: none; border: none; display: block; width: 100%; min-height: 14px; font-family: inherit; background: transparent; font-size: 12px;}
+        
+        .dotted-field:focus, .plain-editable:focus, .table-edit:focus { background-color: #e8f5e9; }
+
+        .header-top { display: flex; justify-content: space-between; font-size: 12px; line-height: 1.2; margin-bottom: 5px;}
+        .header-title { text-align: center; font-weight: normal; font-size: 18px; margin: 10px 0 15px 0; line-height: 1.2; }
+        
+        .basic-info { font-size: 13px; margin-bottom: 15px; }
+        .info-row { display: flex; align-items: flex-end; margin-bottom: 6px; width: 100%; }
+        .flex-grow { flex-grow: 1; }
+        .label-text { white-space: nowrap; margin-right: 5px; padding-bottom: 2px; }
+        .margin-left { margin-left: 12px; }
+        .text-left { text-align: left; padding-left: 2px; }
+
+        .section-title { text-align: center; font-weight: bold; font-size: 14px; margin: 15px 0 5px 0; text-decoration: underline; }
+
+        .dynamic-table-container { display: flex; gap: 10px; justify-content: space-between; align-items: flex-start; margin-bottom: 0px;}
+        .dotted-table { border-collapse: collapse; text-align: center; font-size: 12px; }
+        .dotted-table th, .dotted-table td { border: 1.5px dotted #333; padding: 4px; } 
+        .dotted-table th { font-weight: bold; padding: 4px 2px; }
+
+        .table-spacer { height: 15px; width: 100%; display: block; clear: both; }
+
+        .solid-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; margin-bottom: 15px; table-layout: fixed; }
+        .solid-table th, .solid-table td { border: 1px solid #000; padding: 4px; background-color: white; }
+        .solid-table th { font-weight: bold; padding: 4px 2px;}
+
+        .btn-group { text-align: center; margin-bottom: 10px; display: flex; justify-content: center; gap: 8px; }
+        .btn-group button { background: #e8f5e9; border: 1px dashed #006622; color: #006622; padding: 4px 10px; cursor: pointer; font-size: 11px; border-radius: 3px; font-weight: bold; font-family: inherit;}
+        .btn-group .remove-btn { color: #cc0000; border-color: #cc0000; background: #ffebee; }
+
+        .total-words { display: flex; align-items: baseline; width: 100%; margin-bottom: 15px; font-size: 13px; }
+        .total-words .line { flex-grow: 1; border-bottom: 1.5px dotted #000; outline: none; font-weight: bold; padding-bottom: 2px; margin-left: 5px;}
+
+        .footer-note { font-size: 13px; margin-bottom: 8px; white-space: nowrap; }
+        .footer-text { font-size: 13px; font-weight: bold; }
+        .qr-box { width: 80px; height: 80px; margin: 0; }
+        .signature-text { line-height: 1.5; font-size: 12px; white-space: nowrap; }
+
+        .printing .btn-group { display: none !important; }
+        .printing .dotted-field, .printing .plain-editable, .printing .table-edit, .printing .line { background-color: transparent !important; }
+        
+        .printing .paper-container { min-height: 1123px !important; padding: 15px !important; }
+        .printing .header-title { font-size: 16px !important; margin: 5px 0 10px 0 !important; }
+        .printing .basic-info { font-size: 12px !important; margin-bottom: 10px !important; }
+        .printing .section-title { font-size: 13px !important; margin: 10px 0 5px 0 !important; }
+        
+        .printing .dotted-table, .printing .solid-table { font-size: 10px !important; margin-bottom: 0px !important; }
+        .printing .table-spacer { height: 20px !important; }
+        .printing table.dotted-table.total-table { margin-top: 25px !important; margin-bottom: 15px !important; }
+        .printing .total-words { font-size: 12px !important; margin-bottom: 15px !important; }
+        .printing .footer-note { font-size: 12px !important; margin-bottom: 6px !important; }
+        .printing .footer-text { font-size: 12px !important; }
+        .printing .signature-text { font-size: 11px !important; }
+        .printing .qr-box { width: 75px !important; height: 75px !important; }
+    </style>
+</head>
+<body>
+
+    <div class="no-print">
+        <a href="/">← মেইন মেনুতে ফিরে যান</a>
+        <button class="generate-btn" onclick="generateFile()">PDF ও QR জেনারেট করুন</button>
+        <div id="loading-text" class="loading">ফাইল তৈরি হচ্ছে, দয়া করে অপেক্ষা করুন...</div>
+    </div>
+
+    <!-- MAIN RECEIPT PAPER -->
+    <div class="paper-container" id="receipt-paper">
+        <div class="dotted-wrapper">
+            <div class="content-wrapper">
+                <div class="header-top">
+                    <div>বাংলাদেশ ফরম নং ১০৭৭<br>(সংশোধিত)</div>
+                    <div style="text-align: right;">(পরিশিষ্ট: ৩৮)<br>ক্রমিক নং <span contenteditable="true" spellcheck="false" class="plain-editable" style="font-weight:bold;">৭৮৬৬২৪০১৪২১৪</span></div>
+                </div>
+
+                <div class="header-title">
+                    ভূমি উন্নয়ন কর পরিশোধ রসিদ<br>
+                    <span style="font-size: 12px; font-weight: normal;">(অনুচ্ছেদ ৩৯২ দ্রষ্টব্য)</span>
+                </div>
+
+                <div class="basic-info">
+                    <div class="info-row">
+                        <span class="label-text">সিটি কর্পোরেশন/ পৌর/ ইউনিয়ন ভূমি অফিসের নাম:&nbsp;</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field flex-grow text-left">মহিপুর ইউনিয়ন ভূমি অফিস</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label-text">মৌজার নাম ও জে. এল. নং:&nbsp;</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="width: 25%;">শিববাড়িয়া - ৫৫</span>
+                        <span class="label-text margin-left">উপজেলা/থানা:&nbsp;</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="width: 20%;">কলাপাড়া</span>
+                        <span class="label-text margin-left">জেলা:&nbsp;</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field flex-grow text-left">পটুয়াখালী</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label-text">২ নং রেজিস্টার অনুযায়ী হোল্ডিং নম্বর:&nbsp;</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field flex-grow text-left">১৩৮৪/১</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label-text">খতিয়ান নং:&nbsp;</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field flex-grow text-left">১৩৮৪</span>
+                    </div>
+                </div>
+
+                <div class="section-title">মালিকের বিবরণ</div>
+                <div class="dynamic-table-container">
+                    <table class="dotted-table" id="owner-table-1" style="width: 100%;">
+                        <colgroup><col style="width: 12%;"><col style="width: 63%;"><col style="width: 25%;"></colgroup>
+                        <thead><tr><th>ক্রমঃ</th><th>মালিকের নাম</th><th>মালিকের অংশ</th></tr></thead>
+                        <tbody id="owner-tbody-1"></tbody>
+                    </table>
+                    <table class="dotted-table" id="owner-table-2" style="display: none; width: 48%;">
+                        <colgroup><col style="width: 12%;"><col style="width: 63%;"><col style="width: 25%;"></colgroup>
+                        <thead><tr><th>ক্রমঃ</th><th>মালিকের নাম</th><th>মালিকের অংশ</th></tr></thead>
+                        <tbody id="owner-tbody-2"></tbody>
+                    </table>
+                </div>
+                <div class="btn-group no-print">
+                    <button onclick="addOwner()">+ মালিক যোগ করুন</button>
+                    <button class="remove-btn" onclick="removeOwner()">- মালিক মুছুন</button>
+                </div>
+
+                <div class="section-title">জমির বিবরণ</div>
+                <div class="dynamic-table-container">
+                    <table class="dotted-table" id="land-table-1" style="width: 100%;">
+                        <colgroup><col style="width: 10%;"><col style="width: 25%;"><col style="width: 35%;"><col style="width: 30%;"></colgroup>
+                        <thead><tr><th>ক্রমঃ</th><th>দাগ নং</th><th>জমির শ্রেণি</th><th>জমির পরিমাণ (শতাংশ)</th></tr></thead>
+                        <tbody id="land-tbody-1"></tbody>
+                    </table>
+                    <table class="dotted-table" id="land-table-2" style="display: none; width: 48%;">
+                        <colgroup><col style="width: 10%;"><col style="width: 25%;"><col style="width: 35%;"><col style="width: 30%;"></colgroup>
+                        <thead><tr><th>ক্রমঃ</th><th>দাগ নং</th><th>জমির শ্রেণি</th><th>জমির পরিমাণ (শতাংশ)</th></tr></thead>
+                        <tbody id="land-tbody-2"></tbody>
+                    </table>
+                </div>
+                
+                <div class="table-spacer"></div>
+
+                <table class="dotted-table total-table" style="width: 100%; margin-bottom: 5px;">
+                    <tr>
+                        <td style="text-align: right; width: 50%; padding-right: 15px; font-weight: bold; border-right: 1.5px dotted #333;">সর্বমোট জমি (শতাংশ)</td>
+                        <td style="text-align: left; width: 50%; padding-left: 15px; font-weight: bold; border-left: none; white-space: nowrap;">
+                            <span contenteditable="true" spellcheck="false" class="table-edit" style="display: inline-block; width: 100%; min-width: 100px;">৬৫.০২</span>
+                        </td>
+                    </tr>
+                </table>
+                <div class="btn-group no-print">
+                    <button onclick="addLand()">+ জমি যোগ করুন</button>
+                    <button class="remove-btn" onclick="removeLand()">- জমি মুছুন</button>
+                </div>
+
+                <div class="section-title">আদায়ের বিবরণ</div>
+                <table class="solid-table">
+                    <thead>
+                        <tr>
+                            <th>তিন বৎসরের<br>ঊর্ধ্বের<br>বকেয়া</th>
+                            <th>গত তিন<br>বৎসরের<br>বকেয়া</th>
+                            <th>বকেয়ার<br>জরিমানা ও<br>ক্ষতিপূরণ</th>
+                            <th>হাল<br>দাবি</th>
+                            <th>মোট<br>দাবি</th>
+                            <th>মোট<br>আদায়</th>
+                            <th>মোট<br>বকেয়া</th>
+                            <th>মন্তব্য</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span contenteditable="true" spellcheck="false" class="table-edit">০</span></td>
+                            <td><span contenteditable="true" spellcheck="false" class="table-edit">০</span></td>
+                            <td><span contenteditable="true" spellcheck="false" class="table-edit">০</span></td>
+                            <td><span contenteditable="true" spellcheck="false" class="table-edit">২,৯৭৯</span></td>
+                            <td><span contenteditable="true" spellcheck="false" class="table-edit">২,৯৭৯</span></td>
+                            <td><span contenteditable="true" spellcheck="false" class="table-edit">২,৯৭৯</span></td>
+                            <td><span contenteditable="true" spellcheck="false" class="table-edit">০</span></td>
+                            <td><span contenteditable="true" spellcheck="false" class="table-edit">-</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="total-words">
+                    <span class="label-text">সর্বমোট (কথায়):</span>
+                    <span contenteditable="true" spellcheck="false" class="line text-left">দুই হাজার নয় শত ঊনআশি টাকা মাত্র।</span>
+                </div>
+
+                <div class="footer-area" style="position: relative; width: 100%; margin-top: 15px;">
+                    <div class="footer-left" style="width: 60%; text-align: left;">
+                        <div class="footer-note">নোট: সর্বশেষ কর পরিশোধের সাল <span contenteditable="true" spellcheck="false" class="plain-editable footer-text">2023-2024</span> (অর্থবছর)</div>
+                        <div class="footer-note">চালান নং: <span contenteditable="true" spellcheck="false" class="plain-editable footer-text">২৩২৪-০০৩৫০৩০৭৩৭</span></div>
+                        <div style="display: flex; align-items: center; gap: 5px; margin-top: 8px;">
+                            <span class="footer-text" style="font-weight: normal;">তারিখ:</span>
+                            <div style="display: flex; flex-direction: column; text-align: center; width: 160px;">
+                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="width: 100%; white-space: nowrap; border-bottom: 1.2px solid #000; padding: 0 4px 1px 4px; line-height: 1.1;">৩ বৈশাখ ১৪৩১</span>
+                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="width: 100%; white-space: nowrap; padding: 2px 4px 0 4px; line-height: 1.1;">১৬ এপ্রিল, ২০২৪</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer-center" style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 0;">
+                        <div id="qr-container" class="qr-box"></div>
+                    </div>
+                    <div class="footer-right" style="position: absolute; right: 0; top: -10px; text-align: right;">
+                        <div class="signature-text" style="line-height: 1.4; font-size: 12px; white-space: nowrap;">
+                            এই দাখিলা ইলেক্ট্রনিকভাবে তৈরি করা হয়েছে,<br>কোন স্বাক্ষর প্রয়োজন নেই।
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="border-top: 1.5px dotted #333; margin-top: 25px; padding-top: 5px; position: relative;">
+                <div style="position: absolute; right: 0; top: 3px; font-size: 12px; font-weight: bold;">1/1</div>
+            </div>
+        </div> 
+    </div>
+
+    <script>
+        let ownerCount = 0;
+        let landCount = 0;
+
+        const initialOwners = [
+            ["শহিদুল ইসলাম সানু", "০.০৯৮"], ["শাহ আলম", "০.০৯৮"], ["সেলিম", "০.০৯৮"],
+            ["আব্দুস ছালাম", "০.০৯৮"], ["শাহিন আলম", "০.০৯৭"], ["আব্দুল জলিল", "০.০৯৭"],
+            ["মোঃ নজরুল ইসলাম", "০.০৯৭"], ["রেজাউল ইসলাম [স্বপন]", "০.০৯৭"], ["ছালেহা বেগম", "০.১২৪"],
+            ["শাহনাজ বেগম", "০.০৪৮"], ["নূর জাহান বেগম", "০.০৪৮"]
+        ];
+
+        const initialLands = [
+            ["৪০৬০", "দোকান (বাণিজ্যিক)", "৩.৩৭০০০"], ["৪০৬১", "দোকান (বাণিজ্যিক)", "৩.১২০০০"],
+            ["৪০৬২", "দোকান (বাণিজ্যিক)", "১.৫৬০০০"], ["৪০৬৩", "দোকান (বাণিজ্যিক)", "১.৬২০০০"],
+            ["৪০৬۴", "দোকান (বাণিজ্যিক)", "১.৩১০০০"], ["৪০৬৫", "দোকান (বাণিজ্যিক)", "৪.৩১০০০"],
+            ["৪০৬৬", "দোকান (বাণিজ্যিক)", "১৭.১২০০০"], ["৪০৬৮", "দোকান (বাণিজ্যিক)", "২.৮১০০০"],
+            ["৪০৬৯", "দোকান (বাণিজ্যিক)", "৫.১২০০০"], ["৪০৭০", "দোকান (বাণিজ্যিক)", "৩.৮১০০০"],
+            ["৪০৭১", "দোকান (বাণিজ্যিক)", "২.১২০০০"], ["৪০৭২", "দোকান (বাণিজ্যিক)", "২.৭৫০০০"],
+            ["৪০৭৩", "দোকান (বাণিজ্যিক)", "৪.৯৪০০০"], ["৪০৭৪", "দোকান (বাণিজ্যিক)", "৫.২৫০০০"],
+            ["৪০৭৫", "দোকান (বাণিজ্যিক)", "৫.৮১০০০"]
+        ];
+
+        function convertNumToBangla(num) {
+            const banglaDigits = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+            return num.toString().replace(/[0-9]/g, w => banglaDigits[w]);
+        }
+
+        function updateOwnerLayout() {
+            if(ownerCount <= 6) {
+                document.getElementById('owner-table-1').style.width = '100%';
+                document.getElementById('owner-table-2').style.display = 'none';
+            } else {
+                document.getElementById('owner-table-1').style.width = '49%';
+                document.getElementById('owner-table-2').style.display = 'table';
+                document.getElementById('owner-table-2').style.width = '49%';
+            }
+        }
+
+        function addOwner(name = "", share = "") {
+            ownerCount++;
+            updateOwnerLayout();
+            const tbodyId = ownerCount <= 6 ? 'owner-tbody-1' : 'owner-tbody-2';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span contenteditable="true" spellcheck="false" class="table-edit">${convertNumToBangla(ownerCount)}</span></td>
+                <td><span contenteditable="true" spellcheck="false" class="table-edit" style="text-align: left; padding-left: 2px;">${name}</span></td>
+                <td><span contenteditable="true" spellcheck="false" class="table-edit">${share}</span></td>
+            `;
+            document.getElementById(tbodyId).appendChild(tr);
+        }
+
+        function removeOwner() {
+            if(ownerCount === 0) return;
+            const tbodyId = ownerCount <= 6 ? 'owner-tbody-1' : 'owner-tbody-2';
+            const tbody = document.getElementById(tbodyId);
+            if(tbody.lastChild) tbody.removeChild(tbody.lastChild);
+            ownerCount--;
+            updateOwnerLayout();
+        }
+
+        function updateLandLayout() {
+            if(landCount <= 7) { 
+                document.getElementById('land-table-1').style.width = '100%';
+                document.getElementById('land-table-2').style.display = 'none';
+            } else {
+                document.getElementById('land-table-1').style.width = '49%';
+                document.getElementById('land-table-2').style.display = 'table';
+                document.getElementById('land-table-2').style.width = '49%';
+            }
+        }
+
+        function addLand(dag = "", type = "", amount = "") {
+            landCount++;
+            updateLandLayout();
+            const tbodyId = landCount <= 7 ? 'land-tbody-1' : 'land-tbody-2';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span contenteditable="true" spellcheck="false" class="table-edit">${convertNumToBangla(landCount)}</span></td>
+                <td><span contenteditable="true" spellcheck="false" class="table-edit">${dag}</span></td>
+                <td><span contenteditable="true" spellcheck="false" class="table-edit">${type}</span></td>
+                <td><span contenteditable="true" spellcheck="false" class="table-edit">${amount}</span></td>
+            `;
+            document.getElementById(tbodyId).appendChild(tr);
+        }
+
+        function removeLand() {
+            if(landCount === 0) return;
+            const tbodyId = landCount <= 7 ? 'land-tbody-1' : 'land-tbody-2';
+            const tbody = document.getElementById(tbodyId);
+            if(tbody.lastChild) tbody.removeChild(tbody.lastChild);
+            landCount--;
+            updateLandLayout();
+        }
+
+        window.onload = () => {
+            initialOwners.forEach(owner => addOwner(owner[0], owner[1]));
+            initialLands.forEach(land => addLand(land[0], land[1], land[2]));
+        };
+
+        async function generateFile() {
+            document.getElementById('loading-text').style.display = 'block';
+            const paper = document.getElementById('receipt-paper');
+            
+            try {
+                await document.fonts.ready;
+                const res = await fetch('/get-ip');
+                const data = await res.json();
+                
+                const filename = 'LDTax_' + Date.now() + '.pdf';
+                const fileUrl = `http://${data.ip}:${data.port}/view/${filename}`;
+
+                document.getElementById('qr-container').innerHTML = "";
+                new QRCode(document.getElementById('qr-container'), {
+                    text: fileUrl,
+                    width: 75,
+                    height: 75,
+                    correctLevel : QRCode.CorrectLevel.M
+                });
+
+                paper.classList.add('printing');
+
+                setTimeout(() => {
+                    domtoimage.toPng(paper, { 
+                        quality: 1, 
+                        bgcolor: '#ffffff',
+                        width: paper.clientWidth,
+                        height: paper.clientHeight,
+                        style: {
+                            margin: '0',
+                            boxShadow: 'none'
+                        }
+                    })
+                    .then(function (dataUrl) {
+                        const { jsPDF } = window.jspdf;
+                        const pdf = new jsPDF('p', 'pt', 'a4'); 
+                        
+                        const pdfWidth = pdf.internal.pageSize.getWidth();
+                        const pdfHeight = pdf.internal.pageSize.getHeight();
+                        
+                        const imgWidth = paper.clientWidth;
+                        const imgHeight = paper.clientHeight;
+                        
+                        let ratio = pdfWidth / imgWidth;
+                        let finalWidth = imgWidth * ratio;
+                        let finalHeight = imgHeight * ratio;
+                        
+                        if (finalHeight > pdfHeight) {
+                            ratio = (pdfHeight - 20) / imgHeight;
+                            finalWidth = imgWidth * ratio;
+                            finalHeight = imgHeight * ratio;
+                        }
+                        
+                        const marginX = (pdfWidth - finalWidth) / 2;
+                        const marginY = 15;
+
+                        pdf.addImage(dataUrl, 'PNG', marginX, marginY, finalWidth, finalHeight);
+                        const pdfBlob = pdf.output('blob');
+
+                        const formData = new FormData();
+                        formData.append('pdfFile', pdfBlob, filename);
+                        formData.append('customFilename', filename);
+
+                        fetch('/upload-custom', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if(result.success) {
+                                window.location.href = result.url;
+                            }
+                        })
+                        .catch(err => {
+                            alert("আপলোড করতে সমস্যা হয়েছে!");
+                            paper.classList.remove('printing');
+                            document.getElementById('loading-text').style.display = 'none';
+                        });
+                    })
+                    .catch(function (error) {
+                        alert("PDF তৈরিতে সমস্যা হয়েছে! অনুগ্রহ করে আবার চেষ্টা করুন।");
+                        paper.classList.remove('printing');
+                        document.getElementById('loading-text').style.display = 'none';
+                    });
+                }, 300); 
+
+            } catch (error) {
+                alert("সার্ভার এরর!");
+                paper.classList.remove('printing');
+                document.getElementById('loading-text').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
