@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-// লাইভ সার্ভারের (Render) পোর্টের জন্য আপডেট
 const port = process.env.PORT || 3000;
 
 const uploadDir = path.join(__dirname, 'uploads');
@@ -55,26 +54,37 @@ app.get('/view/:filename', (req, res) => {
                 .logo-area img { height: 45px; margin-right: 12px; }
                 .logo-area .title { font-size: 24px; color: #000; }
                 .right-area { flex-grow: 1; display: flex; flex-direction: column; }
+                
                 .top-bar-bg { height: 35px; background: linear-gradient(to right, rgba(255,255,255,0) 0%, #468c5b 30%, #468c5b 100%); display: flex; justify-content: flex-end; align-items: center; padding-right: 8%; color: white; font-size: 13px; font-weight: bold; }
+                
+                /* Updated Language Toggle CSS Desktop */
                 .lang-toggle { margin-left: 20px; display: flex; border: 1px solid white; border-radius: 2px; overflow: hidden; font-size: 13px;}
-                .lang-toggle .bn { background-color: #0c5625; color: white; padding: 2px 8px; cursor: pointer; }
-                .lang-toggle .en { background-color: white; color: #468c5b; padding: 2px 8px; cursor: pointer; }
+                .lang-toggle span { padding: 2px 8px; cursor: pointer; transition: 0.3s; }
+                .lang-toggle .active { background-color: #0c5625; color: white; }
+                .lang-toggle .inactive { background-color: white; color: #468c5b; }
+                
                 .nav-bar { flex-grow: 1; background-color: white; display: flex; justify-content: flex-end; align-items: center; padding-right: 8%; font-size: 16px; font-weight: bold; }
                 .nav-bar a { text-decoration: none; color: #000; margin-left: 25px; display: flex; align-items: center; }
                 .nav-bar a i { font-size: 12px; margin-left: 6px; color: #555; }
                 .nav-bar .login-btn { background-color: #0c5625; color: white; padding: 8px 25px; border-radius: 20px; margin-left: 25px; font-size: 15px;}
                 .nav-bar .login-btn i { color: white; }
+                
                 .mobile-header { background: white; }
                 .m-top-bar { background-color: #1b5e20; color: white; text-align: center; padding: 8px 10px; font-size: 12px; font-weight: bold; display: flex; justify-content: center; align-items: center;}
+                
+                /* Updated Language Toggle CSS Mobile */
                 .m-lang-toggle { margin-left: 10px; display: flex; border: 1px solid white; border-radius: 2px; overflow: hidden; font-size: 11px;}
-                .m-lang-toggle .bn { background-color: #0c5625; color: white; padding: 1px 5px; }
-                .m-lang-toggle .en { background-color: white; color: #1b5e20; padding: 1px 5px; }
+                .m-lang-toggle span { padding: 1px 5px; cursor: pointer; transition: 0.3s; }
+                .m-lang-toggle .active { background-color: #0c5625; color: white; }
+                .m-lang-toggle .inactive { background-color: white; color: #1b5e20; }
+                
                 .m-nav-container { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ddd;}
                 .m-logo-area { display: flex; align-items: center; }
                 .m-logo-area img { height: 35px; margin-right: 10px;}
                 .m-logo-area .title { font-size: 18px; color: #000; }
                 .hamburger { font-size: 24px; color: #1b5e20; cursor: pointer; }
                 .m-login-btn { background-color: #1b5e20; color: white; padding: 5px 15px; border-radius: 15px; font-size: 13px; text-decoration: none; font-weight:bold;}
+                
                 .viewer-container { text-align: center; padding: 30px 20px 0px 20px; min-height: 85vh; background-color: #eaedea; }
                 .pdf-outer-wrapper { background-color: #e8f5e9; max-width: 900px; margin: 0 auto; padding: 15px 30px 30px 30px; border: 1px solid #c8e6c9; box-sizing: border-box; position: relative; }
                 .print-btn-container { text-align: center; margin-bottom: 15px; }
@@ -82,7 +92,9 @@ app.get('/view/:filename', (req, res) => {
                 #pdf-container { background-color: white; box-shadow: 0 0 15px rgba(0,0,0,0.15); margin: 0 auto; width: 100%; max-width: 820px; overflow: hidden; }
                 #pdf-render { width: 100%; height: auto; display: block; }
                 .loader-text { font-size: 16px; font-weight: bold; color: #388e3c; padding: 40px; }
+                
                 @media (max-width: 768px) { .desktop-header { display: none; } .mobile-header { display: block; } .viewer-container { padding: 10px; background-color: #e8f5e9; } .pdf-outer-wrapper { padding: 0; border: none; background-color: transparent;} #pdf-container { box-shadow: none; border: 1px solid #ddd; } .footer { flex-direction: column; align-items: center; text-align: center; } .footer-col { margin-bottom: 20px; } }
+                
                 .bottom-divider { height: 12px; background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(46,125,50,0.8) 50%, rgba(255,255,255,1) 100%); width: 100%; margin-top: 0px; }
                 .footer { background-color: #e8f5e9; padding: 40px 8%; display: flex; justify-content: space-between; font-size: 13px; align-items: flex-start;}
                 .footer-col h4 { font-size: 15px; margin-bottom: 15px; margin-top: 0; color: #000; font-weight: bold;}
@@ -105,10 +117,11 @@ app.get('/view/:filename', (req, res) => {
                     </div>
                     <div class="right-area">
                         <div class="top-bar-bg">
-                            <span>বৃহস্পতিবার, ৯ আশ্বিন ১৪৩৩, ২৪ সেপ্টেম্বর ২০২৬</span>
+                            <!-- ডাইনামিক ডেট ফিল্ড (Desktop) -->
+                            <span id="desktop-date">লোড হচ্ছে...</span>
                             <div class="lang-toggle">
-                                <span class="bn">বাং</span>
-                                <span class="en">EN</span>
+                                <span class="bn active" onclick="setLanguage('bn')">বাং</span>
+                                <span class="en inactive" onclick="setLanguage('en')">EN</span>
                             </div>
                         </div>
                         <div class="nav-bar">
@@ -121,12 +134,14 @@ app.get('/view/:filename', (req, res) => {
                     </div>
                 </div>
             </div>
+            
             <div class="mobile-header">
                 <div class="m-top-bar">
-                    <span>বৃহস্পতিবার ৯ আশ্বিন ১৪৩৩ ২৪ সেপ্টেম্বর ২০২৬</span>
+                    <!-- ডাইনামিক ডেট ফিল্ড (Mobile) -->
+                    <span id="mobile-date">লোড হচ্ছে...</span>
                     <div class="m-lang-toggle">
-                        <span class="bn">বাং</span>
-                        <span class="en">EN</span>
+                        <span class="bn active" onclick="setLanguage('bn')">বাং</span>
+                        <span class="en inactive" onclick="setLanguage('en')">EN</span>
                     </div>
                 </div>
                 <div class="m-nav-container">
@@ -141,6 +156,7 @@ app.get('/view/:filename', (req, res) => {
                     </div>
                 </div>
             </div>
+            
             <div class="viewer-container">
                 <div class="pdf-outer-wrapper">
                     <div class="print-btn-container">
@@ -152,6 +168,7 @@ app.get('/view/:filename', (req, res) => {
                     </div>
                 </div>
             </div>
+            
             <div class="bottom-divider"></div>
             <div class="footer">
                 <div class="footer-col">
@@ -200,7 +217,39 @@ app.get('/view/:filename', (req, res) => {
                 <div>কপিরাইট ২০২৬ ভূমি ব্যবস্থাপনা অটোমেশন প্রকল্প, ভূমি মন্ত্রণালয়।</div>
                 <div>পরীক্ষামূলক সংস্করণ</div>
             </div>
+            
             <script>
+                // স্বয়ংক্রিয়ভাবে প্রতিদিনের আসল তারিখ ও দিন দেখানোর স্ক্রিপ্ট
+                function generateDynamicDate() {
+                    const today = new Date();
+                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    // তারিখকে সুন্দরভাবে বাংলায় কনভার্ট করবে
+                    const formattedDate = today.toLocaleDateString('bn-BD', options);
+                    
+                    document.getElementById('desktop-date').innerText = formattedDate;
+                    document.getElementById('mobile-date').innerText = formattedDate;
+                }
+                
+                generateDynamicDate();
+
+                // ভাষা পরিবর্তন (বাং/EN) বোতামের স্ক্রিপ্ট
+                function setLanguage(lang) {
+                    const bnBtns = document.querySelectorAll('.bn');
+                    const enBtns = document.querySelectorAll('.en');
+                    
+                    if (lang === 'bn') {
+                        bnBtns.forEach(btn => { btn.classList.add('active'); btn.classList.remove('inactive'); });
+                        enBtns.forEach(btn => { btn.classList.add('inactive'); btn.classList.remove('active'); });
+                    } else if (lang === 'en') {
+                        enBtns.forEach(btn => { btn.classList.add('active'); btn.classList.remove('inactive'); });
+                        bnBtns.forEach(btn => { btn.classList.add('inactive'); btn.classList.remove('active'); });
+                        
+                        // যেহেতু পুরো সাইটের ইংরেজি ভার্সন নেই, তাই ব্যবহারকারীকে সতর্ক করা
+                        alert("The English version is currently under construction. Please use the Bengali version.");
+                    }
+                }
+
+                // পিডিএফ রেন্ডার করার স্ক্রিপ্ট (আপনার আগের কোড)
                 const url = '/uploads/${filename}';
                 const pdfjsLib = window['pdfjs-dist/build/pdf'];
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -223,6 +272,7 @@ app.get('/view/:filename', (req, res) => {
                     console.error('Error rendering PDF:', reason);
                     document.getElementById('loader').innerText = "পিডিএফ লোড করতে সমস্যা হয়েছে!";
                 });
+                
                 function printPdf() {
                     let iframe = document.getElementById('print-iframe');
                     if (!iframe) {
