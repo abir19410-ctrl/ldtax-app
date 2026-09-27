@@ -146,12 +146,12 @@
 
                 <div class="section-title">মালিকের বিবরণ</div>
                 <div class="dynamic-table-container">
-                    <table class="dotted-table" id="owner-table-1" style="width: 100%;">
+                    <table class="dotted-table" id="owner-table-1" style="width: 49%;">
                         <colgroup><col style="width: 12%;"><col style="width: 63%;"><col style="width: 25%;"></colgroup>
                         <thead><tr><th>ক্রমঃ</th><th>মালিকের নাম</th><th>মালিকের অংশ</th></tr></thead>
                         <tbody id="owner-tbody-1"></tbody>
                     </table>
-                    <table class="dotted-table" id="owner-table-2" style="display: none; width: 48%;">
+                    <table class="dotted-table" id="owner-table-2" style="width: 49%;">
                         <colgroup><col style="width: 12%;"><col style="width: 63%;"><col style="width: 25%;"></colgroup>
                         <thead><tr><th>ক্রমঃ</th><th>মালিকের নাম</th><th>মালিকের অংশ</th></tr></thead>
                         <tbody id="owner-tbody-2"></tbody>
@@ -164,12 +164,12 @@
 
                 <div class="section-title">জমির বিবরণ</div>
                 <div class="dynamic-table-container">
-                    <table class="dotted-table" id="land-table-1" style="width: 100%;">
+                    <table class="dotted-table" id="land-table-1" style="width: 49%;">
                         <colgroup><col style="width: 10%;"><col style="width: 25%;"><col style="width: 35%;"><col style="width: 30%;"></colgroup>
                         <thead><tr><th>ক্রমঃ</th><th>দাগ নং</th><th>জমির শ্রেণি</th><th>জমির পরিমাণ (শতাংশ)</th></tr></thead>
                         <tbody id="land-tbody-1"></tbody>
                     </table>
-                    <table class="dotted-table" id="land-table-2" style="display: none; width: 48%;">
+                    <table class="dotted-table" id="land-table-2" style="width: 49%;">
                         <colgroup><col style="width: 10%;"><col style="width: 25%;"><col style="width: 35%;"><col style="width: 30%;"></colgroup>
                         <thead><tr><th>ক্রমঃ</th><th>দাগ নং</th><th>জমির শ্রেণি</th><th>জমির পরিমাণ (শতাংশ)</th></tr></thead>
                         <tbody id="land-tbody-2"></tbody>
@@ -280,21 +280,9 @@
             return num.toString().replace(/[0-9]/g, w => banglaDigits[w]);
         }
 
-        function updateOwnerLayout() {
-            if(ownerCount <= 6) {
-                document.getElementById('owner-table-1').style.width = '100%';
-                document.getElementById('owner-table-2').style.display = 'none';
-            } else {
-                document.getElementById('owner-table-1').style.width = '49%';
-                document.getElementById('owner-table-2').style.display = 'table';
-                document.getElementById('owner-table-2').style.width = '49%';
-            }
-        }
-
         function addOwner(name = "", share = "") {
             ownerCount++;
-            updateOwnerLayout();
-            const tbodyId = ownerCount <= 6 ? 'owner-tbody-1' : 'owner-tbody-2';
+            const tbodyId = ownerCount % 2 !== 0 ? 'owner-tbody-1' : 'owner-tbody-2';
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><span contenteditable="true" spellcheck="false" class="table-edit">${convertNumToBangla(ownerCount)}</span></td>
@@ -305,29 +293,16 @@
         }
 
         function removeOwner() {
-            if(ownerCount === 0) return;
-            const tbodyId = ownerCount <= 6 ? 'owner-tbody-1' : 'owner-tbody-2';
+            if (ownerCount === 0) return;
+            const tbodyId = ownerCount % 2 !== 0 ? 'owner-tbody-1' : 'owner-tbody-2';
             const tbody = document.getElementById(tbodyId);
             if(tbody.lastChild) tbody.removeChild(tbody.lastChild);
             ownerCount--;
-            updateOwnerLayout();
-        }
-
-        function updateLandLayout() {
-            if(landCount <= 7) { 
-                document.getElementById('land-table-1').style.width = '100%';
-                document.getElementById('land-table-2').style.display = 'none';
-            } else {
-                document.getElementById('land-table-1').style.width = '49%';
-                document.getElementById('land-table-2').style.display = 'table';
-                document.getElementById('land-table-2').style.width = '49%';
-            }
         }
 
         function addLand(dag = "", type = "", amount = "") {
             landCount++;
-            updateLandLayout();
-            const tbodyId = landCount <= 7 ? 'land-tbody-1' : 'land-tbody-2';
+            const tbodyId = landCount % 2 !== 0 ? 'land-tbody-1' : 'land-tbody-2';
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><span contenteditable="true" spellcheck="false" class="table-edit">${convertNumToBangla(landCount)}</span></td>
@@ -339,12 +314,11 @@
         }
 
         function removeLand() {
-            if(landCount === 0) return;
-            const tbodyId = landCount <= 7 ? 'land-tbody-1' : 'land-tbody-2';
+            if (landCount === 0) return;
+            const tbodyId = landCount % 2 !== 0 ? 'land-tbody-1' : 'land-tbody-2';
             const tbody = document.getElementById(tbodyId);
             if(tbody.lastChild) tbody.removeChild(tbody.lastChild);
             landCount--;
-            updateLandLayout();
         }
 
         window.onload = () => {
@@ -359,10 +333,8 @@
             try {
                 await document.fonts.ready;
                 
-                // --- শুধুমাত্র এই অংশটুকু লাইভ সার্ভারের জন্য আপডেট করা হয়েছে ---
                 const filename = 'LDTax_' + Date.now() + '.pdf';
                 const fileUrl = window.location.origin + '/view/' + filename;
-                // ----------------------------------------------------------------
 
                 document.getElementById('qr-container').innerHTML = "";
                 new QRCode(document.getElementById('qr-container'), {
