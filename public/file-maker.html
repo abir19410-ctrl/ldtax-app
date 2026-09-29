@@ -9,7 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
-        /* ফন্ট সাইজ ১ পয়েন্ট কমানো হয়েছে (12px এবং 11px) */
         body { font-family: 'Tiro Bangla', serif; background-color: #f0f2f5; margin: 0; padding: 20px; text-rendering: geometricPrecision; }
         .no-print { text-align: center; margin-bottom: 20px; }
         .no-print a { text-decoration: none; color: #006622; font-weight: bold; font-size: 15px; margin-right: 20px;}
@@ -41,7 +40,7 @@
 
         .content-wrapper { flex-grow: 1; }
 
-        .dotted-field { border: none; border-bottom: 1px dotted #000; outline: none; padding: 0 4px; margin-left: 2px; display: inline-block; font-family: inherit; font-size: 12px; white-space: nowrap;}
+        .dotted-field { border: none; border-bottom: 1.5px dotted #000; outline: none; padding: 0 4px; display: inline-block; font-family: inherit; font-size: 12px; white-space: nowrap;}
         .plain-editable { outline: none; display: inline-block; min-width: 30px; font-family: inherit; font-size: 12px; }
         .table-edit { outline: none; border: none; display: block; width: 100%; min-height: 14px; font-family: inherit; background: transparent; font-size: 11px;}
         
@@ -50,13 +49,11 @@
         .header-top { display: flex; justify-content: space-between; font-size: 11px; line-height: 1.2; margin-bottom: 5px;}
         .header-title { text-align: center; font-weight: normal; font-size: 17px; margin: 10px 0 15px 0; line-height: 1.2; }
         
-        /* ওভারল্যাপিং ঠিক করতে flexbox আপডেট করা হয়েছে */
         .basic-info { font-size: 12px; margin-bottom: 15px; }
         .info-row { display: flex; align-items: flex-end; margin-bottom: 6px; width: 100%; }
         .flex-grow { flex-grow: 1; }
-        .label-text { white-space: nowrap; margin-right: 5px; padding-bottom: 2px; }
-        .margin-left { margin-left: 10px; }
-        .text-left { text-align: left; padding-left: 2px; overflow: hidden; text-overflow: ellipsis; } /* লেখার জায়গা নির্দিষ্ট করা হয়েছে */
+        .label-text { white-space: nowrap; margin-right: 10px; padding-bottom: 2px; }
+        .text-left { text-align: left; padding-left: 2px; }
 
         .section-title { text-align: center; font-weight: bold; font-size: 13px; margin: 15px 0 5px 0; text-decoration: underline; }
 
@@ -67,9 +64,8 @@
 
         .table-spacer { height: 15px; width: 100%; display: block; clear: both; }
 
-        /* আদায়ের বিবরণ টেবিলের বর্ডার হালকা করা হয়েছে */
         .solid-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 11px; margin-bottom: 15px; table-layout: fixed; }
-        .solid-table th, .solid-table td { border: 1px solid #999; padding: 4px; background-color: white; } /* বর্ডার কালার #999 করা হয়েছে */
+        .solid-table th, .solid-table td { border: 1px solid #999; padding: 4px; background-color: white; } 
         .solid-table th { font-weight: bold; padding: 4px 2px;}
 
         .btn-group { text-align: center; margin-bottom: 10px; display: flex; justify-content: center; gap: 8px; }
@@ -115,10 +111,8 @@
         <div class="dotted-wrapper">
             <div class="content-wrapper">
                 <div class="header-top">
-                    <!-- ১. ফরম নম্বর এক লাইনে আনা হয়েছে -->
-                    <div style="white-space: nowrap;">বাংলাদেশ ফরম নং ১০৭৭ (সংশোধিত)</div>
-                    <!-- ২. ক্রমিক নং এক লাইনে আনা হয়েছে -->
-                    <div style="text-align: right; white-space: nowrap;">(পরিশিষ্ট: ৩৮)<br>ক্রমিক নং <span contenteditable="true" spellcheck="false" class="plain-editable" style="font-weight:bold;">৭৮৬৬২৪০১৪২১৪</span></div>
+                    <div>বাংলাদেশ ফরম নং ১০৭৭<br>(সংশোধিত)</div>
+                    <div style="text-align: right;">(পরিশিষ্ট: ৩৮)<br>ক্রমিক নং <span contenteditable="true" spellcheck="false" class="plain-editable" style="font-weight:bold;">৭৮৬৬২৪০১৪২১৪</span></div>
                 </div>
 
                 <div class="header-title">
@@ -127,27 +121,26 @@
                 </div>
 
                 <div class="basic-info">
-                    <!-- ৩. ওভারল্যাপিং ঠিক করা হয়েছে -->
-                    <div class="info-row" style="display: flex;">
-                        <span class="label-text">সিটি কর্পোরেশন/ পৌর/ ইউনিয়ন ভূমি অফিসের নাম:&nbsp;</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex: 1;">মহিপুর ইউনিয়ন ভূমি অফিস</span>
+                    <!-- ওভারল্যাপিং ঠিক করা হলো, ডিস্টেন্স বা মার্জিন দিয়ে -->
+                    <div class="info-row">
+                        <span class="label-text">সিটি কর্পোরেশন/ পৌর/ ইউনিয়ন ভূমি অফিসের নাম:</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; margin-left: 5px;">মহিপুর ইউনিয়ন ভূমি অফিস</span>
                     </div>
                     <div class="info-row">
-                        <span class="label-text">মৌজার নাম ও জে. এল. নং:&nbsp;</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="width: 25%;">শিববাড়িয়া - ৫৫</span>
-                        <span class="label-text margin-left">উপজেলা/থানা:&nbsp;</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="width: 20%;">কলাপাড়া</span>
-                        <span class="label-text margin-left">জেলা:&nbsp;</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field flex-grow text-left">পটুয়াখালী</span>
-                    </div>
-                    <!-- ৩. হোল্ডিং নম্বর ওভারল্যাপিং ঠিক করা হয়েছে -->
-                    <div class="info-row" style="display: flex;">
-                        <span class="label-text">২ নং রেজিস্টার অনুযায়ী হোল্ডিং নম্বর:&nbsp;</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex: 1;">১৩৮৪/১</span>
+                        <span class="label-text">মৌজার নাম ও জে. এল. নং:</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="width: 25%; margin-left: 5px;">শিববাড়িয়া - ৫৫</span>
+                        <span class="label-text" style="margin-left: 15px;">উপজেলা/থানা:</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="width: 20%; margin-left: 5px;">কলাপাড়া</span>
+                        <span class="label-text" style="margin-left: 15px;">জেলা:</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; margin-left: 5px;">পটুয়াখালী</span>
                     </div>
                     <div class="info-row">
-                        <span class="label-text">খতিয়ান নং:&nbsp;</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field flex-grow text-left">১৩৮৪</span>
+                        <span class="label-text">২ নং রেজিস্টার অনুযায়ী হোল্ডিং নম্বর:</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; margin-left: 5px;">১৩৮৪/১</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label-text">খতিয়ান নং:</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; margin-left: 5px;">১৩৮৪</span>
                     </div>
                 </div>
 
@@ -199,7 +192,6 @@
                 </div>
 
                 <div class="section-title">আদায়ের বিবরণ</div>
-                <!-- ৪. আদায়ের বিবরণ টেবিলের কলাম সাইজ আপডেট করা হয়েছে (প্রথম ৩টি বড়, পরেরগুলো ছোট) -->
                 <table class="solid-table">
                     <colgroup>
                         <col style="width: 14%;">
@@ -246,15 +238,17 @@
                     <div class="footer-left" style="width: 60%; text-align: left;">
                         <div class="footer-note">নোট: সর্বশেষ কর পরিশোধের সাল <span contenteditable="true" spellcheck="false" class="plain-editable footer-text">2023-2024</span> (অর্থবছর)</div>
                         <div class="footer-note">চালান নং: <span contenteditable="true" spellcheck="false" class="plain-editable footer-text">২৩২৪-০০৩৫০৩০৭৩৭</span></div>
+                        
+                        <!-- নতুন তারিখ লেআউট (দাগ শুধু লেখার মাঝে) -->
                         <div style="display: flex; align-items: center; gap: 5px; margin-top: 8px;">
-                            <span class="footer-text" style="font-weight: normal;">তারিখ:</span>
-                            <!-- ৫. তারিখের দাগ ছোট করা হয়েছে (শুধু লেখার নিচে) -->
-                            <div style="display: inline-flex; flex-direction: column; text-align: center; border-bottom: 1px solid #000; padding-bottom: 2px;">
-                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="padding: 0 4px; line-height: 1.2;">৩ বৈশাখ ১৪৩১</span>
-                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="padding: 0 4px; line-height: 1.2;">১৬ এপ্রিল, ২০২৪</span>
+                            <span class="footer-text" style="font-weight: normal;">তারিখ :</span>
+                            <div style="display: inline-flex; flex-direction: column; text-align: center; margin-left: 5px;">
+                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="padding: 0 5px; line-height: 1.2; border-bottom: 1px solid #000; margin-bottom: 2px;">৩ বৈশাখ ১৪৩১</span>
+                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="padding: 0 5px; line-height: 1.2;">১৬ এপ্রিল, ২০২৪</span>
                             </div>
                         </div>
                     </div>
+                    
                     <div class="footer-center" style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 0;">
                         <div id="qr-container" class="qr-box"></div>
                     </div>
