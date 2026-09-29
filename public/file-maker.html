@@ -46,11 +46,11 @@
         
         .dotted-field:focus, .plain-editable:focus, .table-edit:focus { background-color: #e8f5e9; }
 
-        .header-top { display: flex; justify-content: space-between; font-size: 11px; line-height: 1.2; margin-bottom: 5px;}
+        /* পিডিএফ এ যাতে না ভাঙে তাই টেবিল লেআউট ব্যবহার করা হয়েছে */
+        .header-top { width: 100%; border-collapse: collapse; border: none; margin-bottom: 5px; line-height: 1.2;}
         .header-title { text-align: center; font-weight: normal; font-size: 17px; margin: 10px 0 15px 0; line-height: 1.2; }
         
         .basic-info { font-size: 12px; margin-bottom: 15px; }
-        /* ওভারল্যাপিং রোধ করতে গ্যাপ যোগ করা হয়েছে */
         .info-row { display: flex; align-items: flex-end; margin-bottom: 8px; width: 100%; gap: 10px; }
         .flex-grow { flex-grow: 1; }
         .label-text { white-space: nowrap; padding-bottom: 2px; margin: 0;}
@@ -67,7 +67,8 @@
 
         .solid-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 11px; margin-bottom: 15px; table-layout: fixed; }
         .solid-table th, .solid-table td { border: 1px solid #999; padding: 4px; background-color: white; } 
-        .solid-table th { font-weight: bold; padding: 4px 2px;}
+        /* হেডিং নরমাল করার জন্য ফন্ট ওয়েট চেঞ্জ করা হলো */
+        .solid-table th { font-weight: normal; padding: 4px 2px;}
 
         .btn-group { text-align: center; margin-bottom: 10px; display: flex; justify-content: center; gap: 8px; }
         .btn-group button { background: #e8f5e9; border: 1px dashed #006622; color: #006622; padding: 4px 10px; cursor: pointer; font-size: 10px; border-radius: 3px; font-weight: bold; font-family: inherit;}
@@ -111,10 +112,14 @@
     <div class="paper-container" id="receipt-paper">
         <div class="dotted-wrapper">
             <div class="content-wrapper">
-                <div class="header-top">
-                    <div>বাংলাদেশ ফরম নং ১০৭৭<br>(সংশোধিত)</div>
-                    <div style="text-align: right;">(পরিশিষ্ট: ৩৮)<br>ক্রমিক নং <span contenteditable="true" spellcheck="false" class="plain-editable" style="font-weight:bold;">৭৮৬৬২৪০১৪২১৪</span></div>
-                </div>
+                
+                <!-- পিডিএফ জেনারেটরে ভাঙন রোধ করতে টেবিল লেআউট -->
+                <table class="header-top">
+                    <tr>
+                        <td style="text-align: left; vertical-align: top; font-size: 11px; white-space: nowrap;">বাংলাদেশ ফরম নং ১০৭৭<br>(সংশোধিত)</td>
+                        <td style="text-align: right; vertical-align: top; font-size: 11px; white-space: nowrap;">(পরিশিষ্ট: ৩৮)<br>ক্রমিক নং <span contenteditable="true" spellcheck="false" class="plain-editable" style="font-weight:bold;">৭৮৬৬২৪০১৪২১৪</span></td>
+                    </tr>
+                </table>
 
                 <div class="header-title">
                     ভূমি উন্নয়ন কর পরিশোধ রসিদ<br>
@@ -122,7 +127,6 @@
                 </div>
 
                 <div class="basic-info">
-                    <!-- ওভারল্যাপিং ঠিক করা হয়েছে গ্যাপ (gap) এবং ফ্লেক্স দিয়ে -->
                     <div class="info-row">
                         <span class="label-text">সিটি কর্পোরেশন/ পৌর/ ইউনিয়ন ভূমি অফিসের নাম:</span>
                         <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; padding-left: 5px;">মহিপুর ইউনিয়ন ভূমি অফিস</span>
@@ -240,14 +244,20 @@
                         <div class="footer-note">নোট: সর্বশেষ কর পরিশোধের সাল <span contenteditable="true" spellcheck="false" class="plain-editable footer-text">2023-2024</span> (অর্থবছর)</div>
                         <div class="footer-note">চালান নং: <span contenteditable="true" spellcheck="false" class="plain-editable footer-text">২৩২৪-০০৩৫০৩০৭৩৭</span></div>
                         
-                        <!-- তারিখের দাগ ঠিক মাঝখানে দেওয়া হয়েছে -->
-                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                            <span class="footer-text" style="font-weight: normal;">তারিখ :</span>
-                            <div style="display: inline-flex; flex-direction: column; text-align: center;">
-                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="padding: 0 10px 3px 10px; line-height: 1.2; border-bottom: 1.2px solid #000;">৩ বৈশাখ ১৪৩১</span>
-                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="padding: 3px 10px 0 10px; line-height: 1.2;">১৬ এপ্রিল, ২০২৪</span>
-                            </div>
-                        </div>
+                        <!-- পিডিএফ জেনারেটরে ভাঙন রোধ করতে এবং নিখুঁত ডিজাইনের জন্য টেবিল লেআউট -->
+                        <table style="border-collapse: collapse; margin-top: 10px;">
+                            <tr>
+                                <td rowspan="2" style="vertical-align: middle; font-size: 12px; font-weight: normal; padding-right: 5px;">তারিখ :</td>
+                                <td style="text-align: center; border-bottom: 1.2px solid #000; padding: 0 8px 2px 8px;">
+                                    <div contenteditable="true" spellcheck="false" class="footer-text" style="line-height: 1.1;">৩ বৈশাখ ১৪৩১</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center; padding: 3px 8px 0 8px;">
+                                    <div contenteditable="true" spellcheck="false" class="footer-text" style="line-height: 1.1;">১৬ এপ্রিল, ২০২৪</div>
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                     
                     <div class="footer-center" style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 0;">
@@ -285,7 +295,7 @@
             ["৪০৬৬", "দোকান (বাণিজ্যিক)", "১৭.১২০০০"], ["৪০৬৮", "দোকান (বাণিজ্যিক)", "২.৮১০০০"],
             ["৪০৬৯", "দোকান (বাণিজ্যিক)", "৫.১২০০০"], ["৪০৭০", "দোকান (বাণিজ্যিক)", "৩.৮১০০০"],
             ["৪০৭১", "দোকান (বাণিজ্যিক)", "২.১২০০০"], ["৪০৭২", "দোকান (বাণিজ্যিক)", "২.৭৫০০০"],
-            ["৪০৭৩", "দোকান (বাণিজ্যিক)", "৪.৯৪০০০"], ["৪০৭৪", "দোকান (বাণিজ্যিক)", "৫.২৫০০০"],
+            ["৪০৭৩", "দোকান (বাণিজ্যিক)", "৪.৯৪০০০"], ["৪০৭۴", "দোকান (বাণিজ্যিক)", "৫.২৫০০০"],
             ["৪০৭৫", "দোকান (বাণিজ্যিক)", "৫.৮১০০০"]
         ];
 
