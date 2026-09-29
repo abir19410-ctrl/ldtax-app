@@ -50,9 +50,10 @@
         .header-title { text-align: center; font-weight: normal; font-size: 17px; margin: 10px 0 15px 0; line-height: 1.2; }
         
         .basic-info { font-size: 12px; margin-bottom: 15px; }
-        .info-row { display: flex; align-items: flex-end; margin-bottom: 6px; width: 100%; }
+        /* ওভারল্যাপিং রোধ করতে গ্যাপ যোগ করা হয়েছে */
+        .info-row { display: flex; align-items: flex-end; margin-bottom: 8px; width: 100%; gap: 10px; }
         .flex-grow { flex-grow: 1; }
-        .label-text { white-space: nowrap; margin-right: 10px; padding-bottom: 2px; }
+        .label-text { white-space: nowrap; padding-bottom: 2px; margin: 0;}
         .text-left { text-align: left; padding-left: 2px; }
 
         .section-title { text-align: center; font-weight: bold; font-size: 13px; margin: 15px 0 5px 0; text-decoration: underline; }
@@ -121,26 +122,26 @@
                 </div>
 
                 <div class="basic-info">
-                    <!-- ওভারল্যাপিং ঠিক করা হলো, ডিস্টেন্স বা মার্জিন দিয়ে -->
+                    <!-- ওভারল্যাপিং ঠিক করা হয়েছে গ্যাপ (gap) এবং ফ্লেক্স দিয়ে -->
                     <div class="info-row">
                         <span class="label-text">সিটি কর্পোরেশন/ পৌর/ ইউনিয়ন ভূমি অফিসের নাম:</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; margin-left: 5px;">মহিপুর ইউনিয়ন ভূমি অফিস</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; padding-left: 5px;">মহিপুর ইউনিয়ন ভূমি অফিস</span>
                     </div>
                     <div class="info-row">
                         <span class="label-text">মৌজার নাম ও জে. এল. নং:</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="width: 25%; margin-left: 5px;">শিববাড়িয়া - ৫৫</span>
-                        <span class="label-text" style="margin-left: 15px;">উপজেলা/থানা:</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="width: 20%; margin-left: 5px;">কলাপাড়া</span>
-                        <span class="label-text" style="margin-left: 15px;">জেলা:</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; margin-left: 5px;">পটুয়াখালী</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="width: 25%; padding-left: 5px;">শিববাড়িয়া - ৫৫</span>
+                        <span class="label-text">উপজেলা/থানা:</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="width: 20%; padding-left: 5px;">কলাপাড়া</span>
+                        <span class="label-text">জেলা:</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; padding-left: 5px;">পটুয়াখালী</span>
                     </div>
                     <div class="info-row">
                         <span class="label-text">২ নং রেজিস্টার অনুযায়ী হোল্ডিং নম্বর:</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; margin-left: 5px;">১৩৮৪/১</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; padding-left: 5px;">১৩৮৪/১</span>
                     </div>
                     <div class="info-row">
                         <span class="label-text">খতিয়ান নং:</span>
-                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; margin-left: 5px;">১৩৮৪</span>
+                        <span contenteditable="true" spellcheck="false" class="dotted-field text-left" style="flex-grow: 1; padding-left: 5px;">১৩৮৪</span>
                     </div>
                 </div>
 
@@ -239,12 +240,12 @@
                         <div class="footer-note">নোট: সর্বশেষ কর পরিশোধের সাল <span contenteditable="true" spellcheck="false" class="plain-editable footer-text">2023-2024</span> (অর্থবছর)</div>
                         <div class="footer-note">চালান নং: <span contenteditable="true" spellcheck="false" class="plain-editable footer-text">২৩২৪-০০৩৫০৩০৭৩৭</span></div>
                         
-                        <!-- নতুন তারিখ লেআউট (দাগ শুধু লেখার মাঝে) -->
-                        <div style="display: flex; align-items: center; gap: 5px; margin-top: 8px;">
+                        <!-- তারিখের দাগ ঠিক মাঝখানে দেওয়া হয়েছে -->
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
                             <span class="footer-text" style="font-weight: normal;">তারিখ :</span>
-                            <div style="display: inline-flex; flex-direction: column; text-align: center; margin-left: 5px;">
-                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="padding: 0 5px; line-height: 1.2; border-bottom: 1px solid #000; margin-bottom: 2px;">৩ বৈশাখ ১৪৩১</span>
-                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="padding: 0 5px; line-height: 1.2;">১৬ এপ্রিল, ২০২৪</span>
+                            <div style="display: inline-flex; flex-direction: column; text-align: center;">
+                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="padding: 0 10px 3px 10px; line-height: 1.2; border-bottom: 1.2px solid #000;">৩ বৈশাখ ১৪৩১</span>
+                                <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" style="padding: 3px 10px 0 10px; line-height: 1.2;">১৬ এপ্রিল, ২০২৪</span>
                             </div>
                         </div>
                     </div>
