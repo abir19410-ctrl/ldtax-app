@@ -225,7 +225,6 @@
                         <col style="width: 11%;">
                     </colgroup>
                     <thead>
-                        <!-- হেডিংগুলো ২ লাইনে করা হয়েছে -->
                         <tr>
                             <th>তিন বৎসরের<br>ঊর্ধ্বের বকেয়া</th>
                             <th>গত তিন বৎসরের<br>বকেয়া</th>
@@ -303,7 +302,7 @@
 
         const initialLands = [
             ["৪০৬০", "দোকান (বাণিজ্যিক)", "৩.৩৭০০০"], ["৪০৬১", "দোকান (বাণিজ্যিক)", "৩.১২০০০"],
-            ["৪০৬২", "দোকান (বাণিজ্যিক)", "১.৫৬০০০"], ["৪০৬۳", "দোকান (বাণিজ্যিক)", "১.৬২০০০"],
+            ["৪০৬২", "দোকান (বাণিজ্যিক)", "১.৫৬০০০"], ["৪০৬৩", "দোকান (বাণিজ্যিক)", "১.৬২০০০"],
             ["৪০৬۴", "দোকান (বাণিজ্যিক)", "১.৩১০০০"], ["৪০৬৫", "দোকান (বাণিজ্যিক)", "৪.৩১০০০"],
             ["৪০৬৬", "দোকান (বাণিজ্যিক)", "১৭.১২০০০"], ["৪০৬৮", "দোকান (বাণিজ্যিক)", "২.৮১০০০"],
             ["৪০৬৯", "দোকান (বাণিজ্যিক)", "৫.১২০০০"], ["৪০৭০", "দোকান (বাণিজ্যিক)", "৩.৮১০০০"],
@@ -454,15 +453,20 @@
 
                 paper.classList.add('printing');
 
+                // HD Quality Update: Scale set to 3
+                const scale = 3; 
+
                 setTimeout(() => {
                     domtoimage.toPng(paper, { 
                         quality: 1, 
                         bgcolor: '#ffffff',
-                        width: paper.clientWidth,
-                        height: paper.clientHeight,
+                        width: paper.clientWidth * scale,
+                        height: paper.clientHeight * scale,
                         style: {
                             margin: '0',
-                            boxShadow: 'none'
+                            boxShadow: 'none',
+                            transform: `scale(${scale})`,
+                            transformOrigin: 'top left'
                         }
                     })
                     .then(function (dataUrl) {
