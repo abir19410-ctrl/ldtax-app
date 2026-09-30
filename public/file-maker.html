@@ -31,7 +31,7 @@
 
         .dotted-wrapper {
             border: 2px dotted #333;
-            padding: 20px 25px 10px 25px;
+            padding: 20px 25px 15px 25px;
             box-sizing: border-box;
             flex-grow: 1;
             display: flex;
@@ -260,15 +260,13 @@
                         <div class="footer-note">নোট: সর্বশেষ কর পরিশোধের সাল <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" id="fiscal-year">2023-2024</span> (অর্থবছর)</div>
                         <div class="footer-note">চালান নং: <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" id="chalan-no">২৩২৪-০০৩৫০৩০৭৩৭</span></div>
                         
-                        <div style="margin-top: 10px; overflow: hidden; display: block;">
-                            <div style="float: left; font-size: 13px; margin-right: 8px; padding-top: 4px; white-space: nowrap;">
-                                তারিখ :
+                        <!-- নতুন ফ্লেক্স লেআউট: ওপরের মাত্রা যাতে না কাটে তার জন্য লাইন হাইট ও প্যাডিং বাড়ানো হয়েছে -->
+                        <div style="display: flex; align-items: flex-start; margin-top: 15px;">
+                            <div style="font-size: 13px; margin-right: 8px; padding-top: 3px; white-space: nowrap;">তারিখ :</div>
+                            <div style="text-align: center; font-size: 13px; font-weight: normal;">
+                                <div contenteditable="true" spellcheck="false" id="date-bn" class="footer-text" style="line-height: 1.4; border-bottom: 1.2px solid #000; padding: 0 10px 2px 10px; margin-bottom: 2px; outline: none; white-space: nowrap;">৩ বৈশাখ ১৪৩১</div>
+                                <div contenteditable="true" spellcheck="false" id="date-en" class="footer-text" style="line-height: 1.4; padding: 2px 10px 0 10px; outline: none; white-space: nowrap;">১৬ এপ্রিল, ২০২৪</div>
                             </div>
-                            <div style="float: left; text-align: center; font-size: 13px; font-weight: normal; display: inline-block;">
-                                <div contenteditable="true" spellcheck="false" id="date-bn" class="footer-text" style="line-height: 1.1; border-bottom: 1.2px solid #000; padding-bottom: 2px; margin-bottom: 2px; outline: none; white-space: nowrap;">৩ বৈশাখ ১৪৩১</div>
-                                <div contenteditable="true" spellcheck="false" id="date-en" class="footer-text" style="line-height: 1.1; outline: none; white-space: nowrap; padding-top: 2px;">১৬ এপ্রিল, ২০২৪</div>
-                            </div>
-                            <div style="clear: both;"></div>
                         </div>
                     </div>
                     
@@ -283,8 +281,9 @@
                 </div>
             </div>
 
-            <div style="border-top: 1.5px dotted #333; margin-top: 25px; padding-top: 5px; position: relative;">
-                <div style="position: absolute; right: 0; top: 3px; font-size: 12px; font-weight: bold;">1/1</div>
+            <!-- আসল ছবির মতো নিচের 1/1 ডিজাইন -->
+            <div style="margin-top: auto; border-top: 1px solid #333; padding-top: 5px; text-align: right; font-size: 12px; font-weight: bold; width: 100%;">
+                1/1
             </div>
         </div> 
     </div>
@@ -453,7 +452,6 @@
 
                 paper.classList.add('printing');
 
-                // HD Quality Update: Scale set to 5 for Ultra HD
                 const scale = 5; 
 
                 setTimeout(() => {
