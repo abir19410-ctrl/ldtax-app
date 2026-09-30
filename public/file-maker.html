@@ -260,7 +260,6 @@
                         <div class="footer-note">নোট: সর্বশেষ কর পরিশোধের সাল <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" id="fiscal-year">2023-2024</span> (অর্থবছর)</div>
                         <div class="footer-note">চালান নং: <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" id="chalan-no">২৩২৪-০০৩৫০৩০৭৩৭</span></div>
                         
-                        <!-- নতুন ফ্লেক্স লেআউট: ওপরের মাত্রা যাতে না কাটে তার জন্য লাইন হাইট ও প্যাডিং বাড়ানো হয়েছে -->
                         <div style="display: flex; align-items: flex-start; margin-top: 15px;">
                             <div style="font-size: 13px; margin-right: 8px; padding-top: 3px; white-space: nowrap;">তারিখ :</div>
                             <div style="text-align: center; font-size: 13px; font-weight: normal;">
@@ -281,9 +280,9 @@
                 </div>
             </div>
 
-            <!-- আসল ছবির মতো নিচের 1/1 ডিজাইন -->
-            <div style="margin-top: auto; border-top: 1px solid #333; padding-top: 5px; text-align: right; font-size: 12px; font-weight: bold; width: 100%;">
-                1/1
+            <!-- নিচের অংশ যাতে না কাটে তার জন্য ফিক্সড মার্জিন দেওয়া হয়েছে -->
+            <div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 5px; position: relative; width: 100%;">
+                <div style="position: absolute; right: 0; top: 5px; font-size: 12px; font-weight: bold;">1/1</div>
             </div>
         </div> 
     </div>
@@ -453,13 +452,17 @@
                 paper.classList.add('printing');
 
                 const scale = 5; 
+                
+                // স্ক্রল-হাইট ব্যবহার করে যেনো কোনো লেখাই না কাটে
+                const imgWidth = paper.scrollWidth;
+                const imgHeight = paper.scrollHeight;
 
                 setTimeout(() => {
                     domtoimage.toPng(paper, { 
                         quality: 1, 
                         bgcolor: '#ffffff',
-                        width: paper.clientWidth * scale,
-                        height: paper.clientHeight * scale,
+                        width: imgWidth * scale,
+                        height: imgHeight * scale,
                         style: {
                             margin: '0',
                             boxShadow: 'none',
@@ -473,9 +476,6 @@
                         
                         const pdfWidth = pdf.internal.pageSize.getWidth();
                         const pdfHeight = pdf.internal.pageSize.getHeight();
-                        
-                        const imgWidth = paper.clientWidth;
-                        const imgHeight = paper.clientHeight;
                         
                         let ratio = pdfWidth / imgWidth;
                         let finalWidth = imgWidth * ratio;
