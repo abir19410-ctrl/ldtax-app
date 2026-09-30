@@ -11,8 +11,8 @@
     <style>
         body { font-family: 'Tiro Bangla', serif; background-color: #f0f2f5; margin: 0; padding: 20px; text-rendering: geometricPrecision; }
         .no-print { text-align: center; margin-bottom: 20px; }
-        .no-print a { text-decoration: none; color: #006622; font-weight: bold; font-size: 14px; margin-right: 20px;}
-        .generate-btn { background-color: #006622; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; font-weight: bold; }
+        .no-print a { text-decoration: none; color: #006622; font-weight: bold; font-size: 15px; margin-right: 20px;}
+        .generate-btn { background-color: #006622; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 15px; cursor: pointer; font-weight: bold; }
         .generate-btn:hover { background-color: #004d1a; }
         .loading { display: none; color: #ff0000; font-weight: bold; margin-top: 10px; }
 
@@ -40,57 +40,57 @@
 
         .content-wrapper { flex-grow: 1; }
 
-        .dotted-field { border: none; border-bottom: 1.5px dotted #000; outline: none; padding: 0 4px; display: inline-block; font-family: inherit; font-size: 11px; white-space: nowrap;}
-        .plain-editable { outline: none; display: inline-block; min-width: 30px; font-family: inherit; font-size: 11px; }
-        .table-edit { outline: none; border: none; display: block; width: 100%; min-height: 14px; font-family: inherit; background: transparent; font-size: 10px;}
+        .dotted-field { border: none; border-bottom: 1.5px dotted #000; outline: none; padding: 0 4px; display: inline-block; font-family: inherit; font-size: 13px; white-space: nowrap;}
+        .plain-editable { outline: none; display: inline-block; min-width: 30px; font-family: inherit; font-size: 13px; }
+        .table-edit { outline: none; border: none; display: block; width: 100%; min-height: 14px; font-family: inherit; background: transparent; font-size: 12px;}
         
         .dotted-field:focus, .plain-editable:focus, .table-edit:focus { background-color: #e8f5e9; }
 
-        .header-top { width: 100%; border-collapse: collapse; border: none; margin-bottom: 5px; line-height: 1.2; font-size: 10px;}
-        .header-title { text-align: center; font-weight: normal; font-size: 16px; margin: 10px 0 15px 0; line-height: 1.2; }
+        .header-top { width: 100%; border-collapse: collapse; border: none; margin-bottom: 5px; line-height: 1.2;}
+        .header-title { text-align: center; font-weight: normal; font-size: 18px; margin: 10px 0 15px 0; line-height: 1.2; }
         
-        .basic-info { font-size: 11px; margin-bottom: 15px; }
+        .basic-info { font-size: 13px; margin-bottom: 15px; }
         
-        .section-title { text-align: center; font-weight: bold; font-size: 12px; margin: 15px 0 5px 0; text-decoration: underline; }
+        .section-title { text-align: center; font-weight: bold; font-size: 14px; margin: 15px 0 5px 0; text-decoration: underline; }
 
         .dynamic-table-container { display: flex; gap: 10px; justify-content: space-between; align-items: flex-start; margin-bottom: 0px;}
-        .dotted-table { border-collapse: collapse; text-align: center; font-size: 10px; }
+        .dotted-table { border-collapse: collapse; text-align: center; font-size: 12px; }
         .dotted-table th, .dotted-table td { border: 1.5px dotted #333; padding: 4px; } 
         .dotted-table th { font-weight: bold; padding: 4px 2px; }
 
         .table-spacer { height: 15px; width: 100%; display: block; clear: both; }
 
-        .solid-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 10px; margin-bottom: 15px; table-layout: fixed; }
+        .solid-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; margin-bottom: 15px; table-layout: fixed; }
         .solid-table th, .solid-table td { border: 1px solid #999; padding: 4px; background-color: white; } 
         .solid-table th { font-weight: normal; padding: 4px 2px;}
 
         .btn-group { text-align: center; margin-bottom: 10px; display: flex; justify-content: center; gap: 8px; }
-        .btn-group button { background: #e8f5e9; border: 1px dashed #006622; color: #006622; padding: 4px 10px; cursor: pointer; font-size: 9px; border-radius: 3px; font-weight: bold; font-family: inherit;}
+        .btn-group button { background: #e8f5e9; border: 1px dashed #006622; color: #006622; padding: 4px 10px; cursor: pointer; font-size: 11px; border-radius: 3px; font-weight: bold; font-family: inherit;}
         .btn-group .remove-btn { color: #cc0000; border-color: #cc0000; background: #ffebee; }
 
-        .total-words { display: flex; align-items: baseline; width: 100%; margin-bottom: 15px; font-size: 11px; }
+        .total-words { display: flex; align-items: baseline; width: 100%; margin-bottom: 15px; font-size: 13px; }
         .total-words .line { flex-grow: 1; border-bottom: 1px dotted #000; outline: none; font-weight: bold; padding-bottom: 2px; margin-left: 5px;}
 
-        .footer-note { font-size: 11px; margin-bottom: 8px; white-space: nowrap; }
-        .footer-text { font-size: 11px; font-weight: bold; }
+        .footer-note { font-size: 13px; margin-bottom: 8px; white-space: nowrap; }
+        .footer-text { font-size: 13px; font-weight: bold; }
         .qr-box { width: 80px; height: 80px; margin: 0; }
-        .signature-text { line-height: 1.5; font-size: 10px; white-space: nowrap; }
+        .signature-text { line-height: 1.5; font-size: 12px; white-space: nowrap; }
 
         .printing .btn-group { display: none !important; }
         .printing .dotted-field, .printing .plain-editable, .printing .table-edit, .printing .line { background-color: transparent !important; }
         
         .printing .paper-container { min-height: 1123px !important; padding: 15px !important; }
-        .printing .header-title { font-size: 14px !important; margin: 5px 0 10px 0 !important; }
-        .printing .basic-info { font-size: 10px !important; margin-bottom: 10px !important; }
-        .printing .section-title { font-size: 11px !important; margin: 10px 0 5px 0 !important; }
+        .printing .header-title { font-size: 16px !important; margin: 5px 0 10px 0 !important; }
+        .printing .basic-info { font-size: 12px !important; margin-bottom: 10px !important; }
+        .printing .section-title { font-size: 13px !important; margin: 10px 0 5px 0 !important; }
         
-        .printing .dotted-table, .printing .solid-table { font-size: 8px !important; margin-bottom: 0px !important; }
+        .printing .dotted-table, .printing .solid-table { font-size: 10px !important; margin-bottom: 0px !important; }
         .printing .table-spacer { height: 20px !important; }
         .printing table.dotted-table.total-table { margin-top: 25px !important; margin-bottom: 15px !important; }
-        .printing .total-words { font-size: 10px !important; margin-bottom: 15px !important; }
-        .printing .footer-note { font-size: 10px !important; margin-bottom: 6px !important; }
-        .printing .footer-text { font-size: 10px !important; }
-        .printing .signature-text { font-size: 9px !important; }
+        .printing .total-words { font-size: 12px !important; margin-bottom: 15px !important; }
+        .printing .footer-note { font-size: 12px !important; margin-bottom: 6px !important; }
+        .printing .footer-text { font-size: 12px !important; }
+        .printing .signature-text { font-size: 11px !important; }
         .printing .qr-box { width: 75px !important; height: 75px !important; }
     </style>
 </head>
@@ -109,14 +109,14 @@
                 
                 <table class="header-top">
                     <tr>
-                        <td style="text-align: left; vertical-align: top; font-size: 10px; white-space: nowrap;">বাংলাদেশ ফরম নং ১০৭৭<br>(সংশোধিত)</td>
-                        <td style="text-align: right; vertical-align: top; font-size: 10px; white-space: nowrap;">(পরিশিষ্ট: ৩৮)<br>ক্রমিক নং <span contenteditable="true" spellcheck="false" class="plain-editable" style="font-weight:bold;" id="serial-no">৭৮৬৬২৪০১৪২১৪</span></td>
+                        <td style="text-align: left; vertical-align: top; font-size: 12px; white-space: nowrap;">বাংলাদেশ ফরম নং ১০৭৭<br>(সংশোধিত)</td>
+                        <td style="text-align: right; vertical-align: top; font-size: 12px; white-space: nowrap;">(পরিশিষ্ট: ৩৮)<br>ক্রমিক নং <span contenteditable="true" spellcheck="false" class="plain-editable" style="font-weight:bold;" id="serial-no">৭৮৬৬২৪০১৪২১৪</span></td>
                     </tr>
                 </table>
 
                 <div class="header-title">
                     ভূমি উন্নয়ন কর পরিশোধ রসিদ<br>
-                    <span style="font-size: 10px; font-weight: normal;">(অনুচ্ছেদ ৩৯২ দ্রষ্টব্য)</span>
+                    <span style="font-size: 12px; font-weight: normal;">(অনুচ্ছেদ ৩৯২ দ্রষ্টব্য)</span>
                 </div>
 
                 <div class="basic-info">
@@ -225,10 +225,11 @@
                         <col style="width: 11%;">
                     </colgroup>
                     <thead>
+                        <!-- হেডিংগুলো ২ লাইনে করা হয়েছে -->
                         <tr>
-                            <th>তিন বৎসরের<br>ঊর্ধ্বের<br>বকেয়া</th>
-                            <th>গত তিন<br>বৎসরের<br>বকেয়া</th>
-                            <th>বকেয়ার<br>জরিমানা ও<br>ক্ষতিপূরণ</th>
+                            <th>তিন বৎসরের<br>ঊর্ধ্বের বকেয়া</th>
+                            <th>গত তিন বৎসরের<br>বকেয়া</th>
+                            <th>বকেয়ার জরিমানা ও<br>ক্ষতিপূরণ</th>
                             <th>হাল<br>দাবি</th>
                             <th>মোট<br>দাবি</th>
                             <th>মোট<br>আদায়</th>
@@ -261,10 +262,10 @@
                         <div class="footer-note">চালান নং: <span contenteditable="true" spellcheck="false" class="plain-editable footer-text" id="chalan-no">২৩২৪-০০৩৫০৩০৭৩৭</span></div>
                         
                         <div style="margin-top: 10px; overflow: hidden; display: block;">
-                            <div style="float: left; font-size: 11px; margin-right: 8px; padding-top: 4px; white-space: nowrap;">
+                            <div style="float: left; font-size: 13px; margin-right: 8px; padding-top: 4px; white-space: nowrap;">
                                 তারিখ :
                             </div>
-                            <div style="float: left; text-align: center; font-size: 11px; font-weight: normal; display: inline-block;">
+                            <div style="float: left; text-align: center; font-size: 13px; font-weight: normal; display: inline-block;">
                                 <div contenteditable="true" spellcheck="false" id="date-bn" class="footer-text" style="line-height: 1.1; border-bottom: 1.2px solid #000; padding-bottom: 2px; margin-bottom: 2px; outline: none; white-space: nowrap;">৩ বৈশাখ ১৪৩১</div>
                                 <div contenteditable="true" spellcheck="false" id="date-en" class="footer-text" style="line-height: 1.1; outline: none; white-space: nowrap; padding-top: 2px;">১৬ এপ্রিল, ২০২৪</div>
                             </div>
@@ -276,7 +277,7 @@
                         <div id="qr-container" class="qr-box"></div>
                     </div>
                     <div class="footer-right" style="position: absolute; right: 0; top: -10px; text-align: right;">
-                        <div class="signature-text" style="line-height: 1.4; font-size: 10px; white-space: nowrap;">
+                        <div class="signature-text" style="line-height: 1.4; font-size: 12px; white-space: nowrap;">
                             এই দাখিলা ইলেক্ট্রনিকভাবে তৈরি করা হয়েছে,<br>কোন স্বাক্ষর প্রয়োজন নেই।
                         </div>
                     </div>
@@ -284,7 +285,7 @@
             </div>
 
             <div style="border-top: 1.5px dotted #333; margin-top: 25px; padding-top: 5px; position: relative;">
-                <div style="position: absolute; right: 0; top: 3px; font-size: 10px; font-weight: bold;">1/1</div>
+                <div style="position: absolute; right: 0; top: 3px; font-size: 12px; font-weight: bold;">1/1</div>
             </div>
         </div> 
     </div>
@@ -302,7 +303,7 @@
 
         const initialLands = [
             ["৪০৬০", "দোকান (বাণিজ্যিক)", "৩.৩৭০০০"], ["৪০৬১", "দোকান (বাণিজ্যিক)", "৩.১২০০০"],
-            ["৪০৬২", "দোকান (বাণিজ্যিক)", "১.৫৬০০০"], ["৪০৬৩", "দোকান (বাণিজ্যিক)", "১.৬২০০০"],
+            ["৪০৬২", "দোকান (বাণিজ্যিক)", "১.৫৬০০০"], ["৪০৬۳", "দোকান (বাণিজ্যিক)", "১.৬২০০০"],
             ["৪০৬۴", "দোকান (বাণিজ্যিক)", "১.৩১০০০"], ["৪০৬৫", "দোকান (বাণিজ্যিক)", "৪.৩১০০০"],
             ["৪০৬৬", "দোকান (বাণিজ্যিক)", "১৭.১২০০০"], ["৪০৬৮", "দোকান (বাণিজ্যিক)", "২.৮১০০০"],
             ["৪০৬৯", "দোকান (বাণিজ্যিক)", "৫.১২০০০"], ["৪০৭০", "দোকান (বাণিজ্যিক)", "৩.৮১০০০"],
