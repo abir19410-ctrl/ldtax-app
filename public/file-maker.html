@@ -16,9 +16,10 @@
         .generate-btn:hover { background-color: #004d1a; }
         .loading { display: none; color: #ff0000; font-weight: bold; margin-top: 10px; }
 
+        /* একদম ফিক্সড A4 সাইজ */
         .paper-container { 
             width: 794px; 
-            min-height: 1123px; 
+            height: 1123px; 
             margin: 0 auto; 
             background: white; 
             padding: 15px; 
@@ -27,6 +28,7 @@
             color: #000;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .dotted-wrapper {
@@ -79,8 +81,13 @@
         .printing .btn-group { display: none !important; }
         .printing .dotted-field, .printing .plain-editable, .printing .table-edit, .printing .line { background-color: transparent !important; }
         
-        /* পিডিএফ বানানোর সময় যেন সবটুকু জায়গা নিতে পারে তার জন্য Height max-content করা হয়েছে */
-        .printing .paper-container { min-height: 1123px !important; height: max-content !important; padding: 15px !important; }
+        .printing .paper-container { 
+            width: 794px !important;
+            height: 1123px !important;
+            min-height: 1123px !important; 
+            max-height: 1123px !important; 
+            padding: 15px !important; 
+        }
         .printing .header-title { font-size: 16px !important; margin: 5px 0 10px 0 !important; }
         .printing .basic-info { font-size: 12px !important; margin-bottom: 10px !important; }
         .printing .section-title { font-size: 13px !important; margin: 10px 0 5px 0 !important; }
@@ -281,8 +288,8 @@
                 </div>
             </div>
 
-            <!-- নিচের 1/1 যেন না কাটে তাই লেআউট আপডেট করা হয়েছে এবং Height দেয়া হয়েছে -->
-            <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 5px; text-align: right; font-size: 12px; font-weight: bold; width: 100%;">
+            <!-- নিচের 1/1 লেখাটি যেন কোনোভাবেই না কাটে -->
+            <div style="margin-top: auto; border-top: 1px solid #333; padding-top: 5px; text-align: right; font-size: 12px; font-weight: bold; width: 100%;">
                 1/1
             </div>
         </div> 
@@ -435,6 +442,7 @@
             
             document.getElementById('loading-text').style.display = 'block';
             const paper = document.getElementById('receipt-paper');
+            const qrBox = document.getElementById('qr-container');
             
             try {
                 await document.fonts.ready;
@@ -442,32 +450,42 @@
                 const filename = 'LDTax_' + Date.now() + '.pdf';
                 const fileUrl = window.location.origin + '/view/' + filename;
 
-                document.getElementById('qr-container').innerHTML = "";
-                new QRCode(document.getElementById('qr-container'), {
+                // কিউআর ডাবল হওয়ার সমস্যার সমাধান
+                qrBox.innerHTML = "";
+                new QRCode(qrBox, {
                     text: fileUrl,
                     width: 75,
                     height: 75,
                     correctLevel : QRCode.CorrectLevel.M
                 });
+                
+                // canvas ট্যাগটি রিমুভ করে দেওয়া হলো যাতে dom-to-image ডাবল কপি না বানায়
+                setTimeout(() => {
+                    const canvas = qrBox.querySelector('canvas');
+                    if(canvas) canvas.remove();
+                }, 50);
 
                 paper.classList.add('printing');
 
-                const scale = 5; 
-                
-                const imgWidth = paper.scrollWidth;
-                const imgHeight = paper.scrollHeight;
+                // স্কেল ৪ রাখা হলো যাতে রেন্ডারিংয়ের সময় হাইট ঠিক থাকে
+                const scale = 4; 
+                const a4Width = 794;
+                const a4Height = 1123;
 
                 setTimeout(() => {
                     domtoimage.toPng(paper, { 
                         quality: 1, 
                         bgcolor: '#ffffff',
-                        width: imgWidth * scale,
-                        height: imgHeight * scale,
+                        // হাইট ক্যালকুলেশনে কোনো গড়মিল যেন না হয় তাই ফিক্সড A4 সাইজ দেয়া হলো
+                        width: a4Width * scale,
+                        height: a4Height * scale,
                         style: {
                             margin: '0',
                             boxShadow: 'none',
                             transform: `scale(${scale})`,
-                            transformOrigin: 'top left'
+                            transformOrigin: 'top left',
+                            width: `${a4Width}px`,
+                            height: `${a4Height}px`
                         }
                     })
                     .then(function (dataUrl) {
@@ -477,22 +495,8 @@
                         const pdfWidth = pdf.internal.pageSize.getWidth();
                         const pdfHeight = pdf.internal.pageSize.getHeight();
                         
-                        let ratio = pdfWidth / imgWidth;
-                        let finalWidth = imgWidth * ratio;
-                        let finalHeight = imgHeight * ratio;
-                        
-                        // যদি রসিদটি A4 পেজের চেয়েও বড় হয়, তবে তা স্কেল ডাউন হবে।
-                        if (finalHeight > (pdfHeight - 20)) {
-                            ratio = (pdfHeight - 20) / imgHeight;
-                            finalWidth = imgWidth * ratio;
-                            finalHeight = imgHeight * ratio;
-                        }
-                        
-                        // A4 পেজের একদম মাঝখানে (Centered) পারফেক্টলি ফিট করার লজিক
-                        const marginX = (pdfWidth - finalWidth) / 2;
-                        const marginY = (pdfHeight - finalHeight) / 2;
-
-                        pdf.addImage(dataUrl, 'PNG', marginX, marginY, finalWidth, finalHeight);
+                        // পেজ একদম নিখুঁতভাবে ফিট হবে, একটুও ফাটবে বা কাটবে না
+                        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
                         const pdfBlob = pdf.output('blob');
 
                         const formData = new FormData();
