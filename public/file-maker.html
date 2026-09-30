@@ -79,7 +79,8 @@
         .printing .btn-group { display: none !important; }
         .printing .dotted-field, .printing .plain-editable, .printing .table-edit, .printing .line { background-color: transparent !important; }
         
-        .printing .paper-container { min-height: 1123px !important; padding: 15px !important; }
+        /* পিডিএফ বানানোর সময় যেন সবটুকু জায়গা নিতে পারে তার জন্য Height max-content করা হয়েছে */
+        .printing .paper-container { min-height: 1123px !important; height: max-content !important; padding: 15px !important; }
         .printing .header-title { font-size: 16px !important; margin: 5px 0 10px 0 !important; }
         .printing .basic-info { font-size: 12px !important; margin-bottom: 10px !important; }
         .printing .section-title { font-size: 13px !important; margin: 10px 0 5px 0 !important; }
@@ -280,9 +281,9 @@
                 </div>
             </div>
 
-            <!-- নিচের অংশ যাতে না কাটে তার জন্য ফিক্সড মার্জিন দেওয়া হয়েছে -->
-            <div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 5px; position: relative; width: 100%;">
-                <div style="position: absolute; right: 0; top: 5px; font-size: 12px; font-weight: bold;">1/1</div>
+            <!-- নিচের 1/1 যেন না কাটে তাই লেআউট আপডেট করা হয়েছে এবং Height দেয়া হয়েছে -->
+            <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 5px; text-align: right; font-size: 12px; font-weight: bold; width: 100%;">
+                1/1
             </div>
         </div> 
     </div>
@@ -453,7 +454,6 @@
 
                 const scale = 5; 
                 
-                // স্ক্রল-হাইট ব্যবহার করে যেনো কোনো লেখাই না কাটে
                 const imgWidth = paper.scrollWidth;
                 const imgHeight = paper.scrollHeight;
 
@@ -481,14 +481,16 @@
                         let finalWidth = imgWidth * ratio;
                         let finalHeight = imgHeight * ratio;
                         
-                        if (finalHeight > pdfHeight) {
+                        // যদি রসিদটি A4 পেজের চেয়েও বড় হয়, তবে তা স্কেল ডাউন হবে।
+                        if (finalHeight > (pdfHeight - 20)) {
                             ratio = (pdfHeight - 20) / imgHeight;
                             finalWidth = imgWidth * ratio;
                             finalHeight = imgHeight * ratio;
                         }
                         
+                        // A4 পেজের একদম মাঝখানে (Centered) পারফেক্টলি ফিট করার লজিক
                         const marginX = (pdfWidth - finalWidth) / 2;
-                        const marginY = 15;
+                        const marginY = (pdfHeight - finalHeight) / 2;
 
                         pdf.addImage(dataUrl, 'PNG', marginX, marginY, finalWidth, finalHeight);
                         const pdfBlob = pdf.output('blob');
