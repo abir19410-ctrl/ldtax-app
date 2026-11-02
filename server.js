@@ -36,6 +36,11 @@ app.get('/view/:filename', (req, res) => {
     const filePath = path.join(__dirname, 'uploads', filename);
     
     if (fs.existsSync(filePath)) {
+        // প্রজেক্টের লাইভ ডোমেইন URL (Render.com এর লিংক)
+        const host = req.get('host');
+        const protocol = req.protocol;
+        const pdfUrl = `${protocol}://${host}/uploads/${filename}`;
+        
         res.send(`
         <!DOCTYPE html>
         <html lang="bn">
@@ -88,9 +93,9 @@ app.get('/view/:filename', (req, res) => {
                 .print-btn { background-color: #3b82f6; color: white; border: none; padding: 8px 25px; border-radius: 4px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
                 
                 #pdf-container { background-color: white; box-shadow: 0 0 15px rgba(0,0,0,0.15); margin: 0 auto; width: 100%; max-width: 820px; overflow: hidden; border-radius: 4px; }
-                .fast-pdf-frame { width: 100%; height: 80vh; min-height: 500px; border: none; display: block; }
+                .fast-pdf-frame { width: 100%; height: 1000px; border: none; display: block; }
                 
-                @media (max-width: 768px) { .desktop-header { display: none; } .mobile-header { display: block; } .viewer-container { padding: 10px; background-color: #e8f5e9; } .pdf-outer-wrapper { padding: 0; border: none; background-color: transparent;} #pdf-container { box-shadow: none; border: 1px solid #ddd; } .footer { flex-direction: column; align-items: center; text-align: center; } .footer-col { margin-bottom: 20px; } .fast-pdf-frame { height: 70vh; } }
+                @media (max-width: 768px) { .desktop-header { display: none; } .mobile-header { display: block; } .viewer-container { padding: 10px; background-color: #e8f5e9; } .pdf-outer-wrapper { padding: 0; border: none; background-color: transparent;} #pdf-container { box-shadow: none; border: 1px solid #ddd; } .footer { flex-direction: column; align-items: center; text-align: center; } .footer-col { margin-bottom: 20px; } .fast-pdf-frame { height: 650px; } }
                 
                 .bottom-divider { height: 12px; background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(46,125,50,0.8) 50%, rgba(255,255,255,1) 100%); width: 100%; margin-top: 0px; }
                 .footer { background-color: #e8f5e9; padding: 40px 8%; display: flex; justify-content: space-between; font-size: 13px; align-items: flex-start;}
@@ -158,9 +163,9 @@ app.get('/view/:filename', (req, res) => {
                         <button class="print-btn" onclick="printPdf()"><i class="fas fa-print"></i> প্রিন্ট</button>
                     </div>
                     
-                    <!-- আপডেট: সরাসরি এবং দ্রুত পিডিএফ দেখানোর জন্য iframe ট্যাগ যুক্ত করা হলো -->
+                    <!-- আপডেট: Google Docs Viewer দিয়ে মোবাইল ও পিসি দুই জায়গাতেই সরাসরি PDF ওপেন হবে -->
                     <div id="pdf-container">
-                        <iframe src="/uploads/${filename}#toolbar=0&view=FitH" class="fast-pdf-frame"></iframe>
+                        <iframe src="https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true" class="fast-pdf-frame"></iframe>
                     </div>
                     
                 </div>
