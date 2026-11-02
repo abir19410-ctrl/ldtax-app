@@ -16,7 +16,13 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/');
     },
     filename: function (req, file, cb) {
-        cb(null, req.body.customFilename || file.originalname);
+        if (file.fieldname === 'pdfFile') {
+            cb(null, req.body.customFilename || file.originalname);
+        } else if (file.fieldname === 'imgFile') {
+            cb(null, req.body.customImgFilename || file.originalname);
+        } else {
+            cb(null, file.originalname);
+        }
     }
 });
 const upload = multer({ storage: storage });
@@ -24,23 +30,33 @@ const upload = multer({ storage: storage });
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.post('/upload-custom', upload.single('pdfFile'), (req, res) => {
-    if (!req.file) {
+// ফাইল মেকার থেকে পিডিএফ এবং ছবি দুটোই রিসিভ করার রাউট
+app.post('/upload-custom', upload.fields([{ name: 'pdfFile', maxCount: 1 }, { name: 'imgFile', maxCount: 1 }]), (req, res) => {
+    if (!req.files || !req.files['pdfFile']) {
         return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
-    res.json({ success: true, url: `/view/${req.file.filename}` });
+    const pdfFilename = req.files['pdfFile'][0].filename;
+    res.json({ success: true, url: `/view/${pdfFilename}` });
+});
+
+// ম্যানুয়াল পিডিএফ আপলোড করার রাউট (QR Generator পেজের জন্য)
+app.post('/upload', upload.single('pdfFile'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).send('No file uploaded');
+    }
+    res.redirect(`/view/${req.file.filename}`);
 });
 
 app.get('/view/:filename', (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(__dirname, 'uploads', filename);
     
+    // পিডিএফ ফাইলের নামের সাথে মিল রেখে ছবির নাম বের করা
+    const imgFilename = filename.replace('.pdf', '.jpg');
+    const imgPath = path.join(__dirname, 'uploads', imgFilename);
+    const hasImage = fs.existsSync(imgPath);
+    
     if (fs.existsSync(filePath)) {
-        // প্রজেক্টের লাইভ ডোমেইন URL (Render.com এর লিংক)
-        const host = req.get('host');
-        const protocol = req.protocol;
-        const pdfUrl = `${protocol}://${host}/uploads/${filename}`;
-        
         res.send(`
         <!DOCTYPE html>
         <html lang="bn">
@@ -93,10 +109,29 @@ app.get('/view/:filename', (req, res) => {
                 .print-btn { background-color: #3b82f6; color: white; border: none; padding: 8px 25px; border-radius: 4px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
                 
                 #pdf-container { background-color: white; box-shadow: 0 0 15px rgba(0,0,0,0.15); margin: 0 auto; width: 100%; max-width: 820px; overflow: hidden; border-radius: 4px; }
+                
+                /* রসিদের ছবি একদম ফাস্ট ও ক্লিয়ার দেখানোর স্টাইল */
+                .receipt-img { width: 100%; height: auto; display: block; }
                 .fast-pdf-frame { width: 100%; height: 1000px; border: none; display: block; }
                 
-                @media (max-width: 768px) { .desktop-header { display: none; } .mobile-header { display: block; } .viewer-container { padding: 10px; background-color: #e8f5e9; } .pdf-outer-wrapper { padding: 0; border: none; background-color: transparent;} #pdf-container { box-shadow: none; border: 1px solid #ddd; } .footer { flex-direction: column; align-items: center; text-align: center; } .footer-col { margin-bottom: 20px; } .fast-pdf-frame { height: 650px; } }
+                @media (max-width: 768px) { 
+                    .desktop-header { display: none; } 
+                    .mobile-header { display: block; } 
+                    .viewer-container { padding: 10px; background-color: #e8f5e9; } 
+                    .pdf-outer-wrapper { padding: 0; border: none; background-color: transparent;} 
+                    #pdf-container { box-shadow: none; border: 1px solid #ddd; } 
+                    .footer { flex-direction: column; align-items: center; text-align: center; } 
+                    .footer-col { margin-bottom: 20px; } 
+                }
                 
+                /* প্রিন্ট করার সময় যেন শুধুমাত্র রসিদটিই প্রিন্ট হয়, ওয়েবসাইটের মেনু বা ফুটার যেন না আসে */
+                @media print {
+                    body * { visibility: hidden; }
+                    #pdf-container, #pdf-container * { visibility: visible; }
+                    #pdf-container { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; box-shadow: none; border: none; margin: 0; padding: 0; }
+                    .desktop-header, .mobile-header, .print-btn-container, .bottom-divider, .footer, .bottom-bar { display: none !important; }
+                }
+
                 .bottom-divider { height: 12px; background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(46,125,50,0.8) 50%, rgba(255,255,255,1) 100%); width: 100%; margin-top: 0px; }
                 .footer { background-color: #e8f5e9; padding: 40px 8%; display: flex; justify-content: space-between; font-size: 13px; align-items: flex-start;}
                 .footer-col h4 { font-size: 15px; margin-bottom: 15px; margin-top: 0; color: #000; font-weight: bold;}
@@ -163,9 +198,12 @@ app.get('/view/:filename', (req, res) => {
                         <button class="print-btn" onclick="printPdf()"><i class="fas fa-print"></i> প্রিন্ট</button>
                     </div>
                     
-                    <!-- আপডেট: Google Docs Viewer দিয়ে মোবাইল ও পিসি দুই জায়গাতেই সরাসরি PDF ওপেন হবে -->
+                    <!-- আপডেট: সাথে সাথে রসিদ দেখানোর জন্য সরাসরি Image রেন্ডার করা হচ্ছে -->
                     <div id="pdf-container">
-                        <iframe src="https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true" class="fast-pdf-frame"></iframe>
+                        ${hasImage 
+                            ? `<img src="/uploads/${imgFilename}" class="receipt-img" alt="ভূমি উন্নয়ন কর রসিদ">` 
+                            : `<iframe src="/uploads/${filename}#toolbar=0&view=FitH" class="fast-pdf-frame"></iframe>`
+                        }
                     </div>
                     
                 </div>
@@ -247,21 +285,29 @@ app.get('/view/:filename', (req, res) => {
                     }
                 }
 
-                const url = '/uploads/${filename}';
+                const pdfUrl = '/uploads/${filename}';
                 
                 function printPdf() {
+                    // মোবাইল ডিভাইসে সরাসরি পিডিএফ ট্যাব ওপেন হবে অথবা প্রিন্ট হবে
+                    if (window.innerWidth <= 768) {
+                        window.open(pdfUrl, '_blank');
+                        return;
+                    }
+                    
+                    // পিসিতে সরাসরি প্রিন্ট ডায়ালগ ওপেন হবে
                     let iframe = document.getElementById('print-iframe');
                     if (!iframe) {
                         iframe = document.createElement('iframe');
                         iframe.id = 'print-iframe';
                         iframe.style.display = 'none';
-                        iframe.src = url;
+                        iframe.src = pdfUrl;
                         document.body.appendChild(iframe);
                         iframe.onload = function() {
-                            setTimeout(function() { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 500);
+                            setTimeout(function() { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 300);
                         };
                     } else {
-                        iframe.contentWindow.focus(); iframe.contentWindow.print();
+                        iframe.contentWindow.focus(); 
+                        iframe.contentWindow.print();
                     }
                 }
             </script>
@@ -269,7 +315,7 @@ app.get('/view/:filename', (req, res) => {
         </html>
         `);
     } else {
-        res.status(404).send('<h2 style="text-align:center; color:red; margin-top:50px;">ফাইলটি পাওয়া যায়নি!</h2>');
+        res.status(404).send('<h2 style="text-align:center; color:red; margin-top:50px;">ফাইলটি পাওয়া যায়নি! নতুন করে রসিদ জেনারেট করুন।</h2>');
     }
 });
 
