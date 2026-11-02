@@ -490,9 +490,7 @@
             
             try {
                 await document.fonts.ready;
-                const baseId = 'LDTax_' + Date.now();
-                const filename = baseId + '.pdf';
-                const imgFilename = baseId + '.jpg';
+                const filename = 'LDTax_' + Date.now() + '.pdf';
                 const fileUrl = window.location.origin + '/view/' + filename;
 
                 qrBox.innerHTML = "";
@@ -510,7 +508,6 @@
 
                 paper.classList.add('printing');
 
-                // স্কেল ৩ এবং JPEG ফরম্যাট ব্যবহার করা হলো যেন ফাইল হালকা থাকে কিন্তু কোয়ালিটি একদম ক্লিয়ার হয়
                 const scale = 3; 
                 const a4Width = 794;
                 const a4Height = 1123;
@@ -530,7 +527,7 @@
                             height: `${a4Height}px`
                         }
                     })
-                    .then(async function (dataUrl) {
+                    .then(function (dataUrl) {
                         const { jsPDF } = window.jspdf;
                         const pdf = new jsPDF('p', 'pt', 'a4'); 
                         const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -538,15 +535,12 @@
                         
                         pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight);
                         const pdfBlob = pdf.output('blob');
-                        
-                        // ডিসপ্লেতে সাথে সাথে দেখানোর জন্য ছবিটির Blob তৈরি করা
-                        const imgBlob = await (await fetch(dataUrl)).blob();
 
+                        // শুধুমাত্র ১টি ফাইল (pdfFile) এবং টেক্সট হিসেবে ছবির ডাটা পাঠানো হচ্ছে যেন আপলোড কখনোই ফেইল না করে
                         const formData = new FormData();
                         formData.append('customFilename', filename);
-                        formData.append('customImgFilename', imgFilename);
                         formData.append('pdfFile', pdfBlob, filename);
-                        formData.append('imgFile', imgBlob, imgFilename);
+                        formData.append('imgData', dataUrl);
 
                         fetch('/upload-custom', {
                             method: 'POST',
@@ -556,6 +550,10 @@
                         .then(result => {
                             if(result.success) {
                                 window.location.href = result.url;
+                            } else {
+                                alert("আপলোড করতে সমস্যা হয়েছে!");
+                                paper.classList.remove('printing');
+                                document.getElementById('loading-text').style.display = 'none';
                             }
                         })
                         .catch(err => {
