@@ -50,7 +50,6 @@
         .header-top { width: 100%; border-collapse: collapse; border: none; margin-bottom: 5px; line-height: 1.2;}
         .header-title { text-align: center; font-weight: normal; font-size: 18px; margin: 10px 0 10px 0; line-height: 1.2; }
         
-        /* লাল দাগের আপডেট: বেসিক ইনফো ২ পয়েন্ট বড় করা হলো (13px -> 15px) */
         .basic-info { margin-bottom: 10px; }
         .basic-info td { font-size: 15px; }
         .basic-info .dotted-field { font-size: 15px; }
@@ -60,14 +59,11 @@
         .dynamic-table-container { display: flex; gap: 10px; justify-content: space-between; align-items: flex-start; margin-bottom: 0px;}
         .dotted-table { border-collapse: collapse; text-align: center; font-size: 12px; transition: width 0.3s ease; }
         
-        /* হলুদ দাগের আপডেট: হেডিংগুলো আরও বেশি বোল্ড করা হলো */
-        .dotted-table th { font-weight: 900; padding: 4px 2px; -webkit-text-stroke: 0.3px #000; }
+        .dotted-table th { font-weight: 900; padding: 4px 2px; -webkit-text-stroke: 0.3px #000; border: 1.5px dotted #333; }
         .dotted-table td { border: 1.5px dotted #333; padding: 4px; } 
-        .dotted-table th { border: 1.5px dotted #333; }
 
         .table-spacer { height: 10px; width: 100%; display: block; clear: both; }
 
-        /* সবুজ দাগের আপডেট: আদায়ের বিবরণ টেবিল ২ পয়েন্ট বড় করা হলো (12px -> 14px) */
         .solid-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 14px; margin-bottom: 12px; table-layout: fixed; }
         .solid-table th, .solid-table td { border: 1px solid #999; padding: 4px; background-color: white; } 
         .solid-table th { font-weight: normal; padding: 4px 2px;}
@@ -81,7 +77,6 @@
         .tw-label { white-space: nowrap; width: 1%; padding-right: 8px; vertical-align: bottom; font-size: 13px; }
         .tw-line { border-bottom: 1px dotted #000; outline: none; font-weight: bold; width: 100%; font-size: 13px; padding-bottom: 2px; text-align: left; }
 
-        /* নীল দাগের আপডেট: নিচের নোট ও তারিখ ১ পয়েন্ট বড় করা হলো (13px -> 14px) */
         .footer-note { font-size: 14px; margin-bottom: 8px; white-space: nowrap; }
         .footer-text { font-size: 14px; font-weight: bold; }
         .date-label { font-size: 14px; margin-right: 8px; padding-top: 3px; white-space: nowrap; }
@@ -102,14 +97,13 @@
         
         .printing .header-title { font-size: 16px !important; margin: 5px 0 8px 0 !important; }
         
-        /* পিডিএফ প্রিন্টিং এর জন্য আপডেট করা ফন্ট সাইজ */
         .printing .basic-info td { font-size: 14px !important; }
         .printing .basic-info .dotted-field { font-size: 14px !important; }
         .printing .basic-info { margin-bottom: 5px !important; }
         
         .printing .section-title { font-size: 13px !important; margin: 6px 0 3px 0 !important; }
         
-        .printing .dotted-table, .printing .solid-table { font-size: 10px !important; margin-bottom: 0px !important; }
+        .printing .dotted-table { font-size: 10px !important; margin-bottom: 0px !important; }
         .printing .table-spacer { height: 6px !important; }
         .printing table.dotted-table.total-table { margin-top: 20px !important; margin-bottom: 10px !important; }
         
@@ -274,9 +268,9 @@
                             <td><span contenteditable="true" spellcheck="false" class="table-edit" id="ad-1">০</span></td>
                             <td><span contenteditable="true" spellcheck="false" class="table-edit" id="ad-2">০</span></td>
                             <td><span contenteditable="true" spellcheck="false" class="table-edit" id="ad-3">০</span></td>
-                            <td><span contenteditable="true" spellcheck="false" class="table-edit" id="ad-4">২,۹৭৯</span></td>
-                            <td><span contenteditable="true" spellcheck="false" class="table-edit" id="ad-5">২,۹৭৯</span></td>
-                            <td><span contenteditable="true" spellcheck="false" class="table-edit" id="ad-6">২,۹৭৯</span></td>
+                            <td><span contenteditable="true" spellcheck="false" class="table-edit" id="ad-4">২,৯৭৯</span></td>
+                            <td><span contenteditable="true" spellcheck="false" class="table-edit" id="ad-5">২,৯৭৯</span></td>
+                            <td><span contenteditable="true" spellcheck="false" class="table-edit" id="ad-6">২,৯৭৯</span></td>
                             <td><span contenteditable="true" spellcheck="false" class="table-edit" id="ad-7">০</span></td>
                             <td><span contenteditable="true" spellcheck="false" class="table-edit" id="ad-8">-</span></td>
                         </tr>
@@ -335,11 +329,11 @@
         const initialLands = [
             ["৪০৬০", "দোকান (বাণিজ্যিক)", "৩.৩৭০০০"], ["৪০৬১", "দোকান (বাণিজ্যিক)", "৩.১২০০০"],
             ["৪০৬২", "দোকান (বাণিজ্যিক)", "১.৫৬০০০"], ["৪০৬৩", "দোকান (বাণিজ্যিক)", "১.৬২০০০"],
-            ["৪০৬۴", "দোকান (বাণিজ্যিক)", "১.৩১০০০"], ["৪০৬৫", "দোকান (বাণিজ্যিক)", "৪.৩১০০০"],
+            ["৪০৬৪", "দোকান (বাণিজ্যিক)", "১.৩১০০০"], ["৪০৬৫", "দোকান (বাণিজ্যিক)", "৪.৩১০০০"],
             ["৪০৬৬", "দোকান (বাণিজ্যিক)", "১৭.১২০০০"], ["৪০৬৮", "দোকান (বাণিজ্যিক)", "২.৮১০০০"],
             ["৪০৬৯", "দোকান (বাণিজ্যিক)", "৫.১২০০০"], ["৪০৭০", "দোকান (বাণিজ্যিক)", "৩.৮১০০০"],
             ["৪০৭১", "দোকান (বাণিজ্যিক)", "২.১২০০০"], ["৪০৭২", "দোকান (বাণিজ্যিক)", "২.৭৫০০০"],
-            ["৪০৭৩", "দোকান (বাণিজ্যিক)", "৪.৯৪০০০"], ["৪০৭۴", "দোকান (বাণিজ্যিক)", "৫.২৫০০০"],
+            ["৪০৭৩", "দোকান (বাণিজ্যিক)", "৪.৯৪০০০"], ["৪০৭৪", "দোকান (বাণিজ্যিক)", "৫.২৫০০০"],
             ["৪০৭৫", "দোকান (বাণিজ্যিক)", "৫.৮১০০০"]
         ];
 
@@ -496,7 +490,9 @@
             
             try {
                 await document.fonts.ready;
-                const filename = 'LDTax_' + Date.now() + '.pdf';
+                const baseId = 'LDTax_' + Date.now();
+                const filename = baseId + '.pdf';
+                const imgFilename = baseId + '.jpg';
                 const fileUrl = window.location.origin + '/view/' + filename;
 
                 qrBox.innerHTML = "";
@@ -514,13 +510,14 @@
 
                 paper.classList.add('printing');
 
-                const scale = 4; 
+                // স্কেল ৩ এবং JPEG ফরম্যাট ব্যবহার করা হলো যেন ফাইল হালকা থাকে কিন্তু কোয়ালিটি একদম ক্লিয়ার হয়
+                const scale = 3; 
                 const a4Width = 794;
                 const a4Height = 1123;
 
                 setTimeout(() => {
-                    domtoimage.toPng(paper, { 
-                        quality: 1, 
+                    domtoimage.toJpeg(paper, { 
+                        quality: 0.95, 
                         bgcolor: '#ffffff',
                         width: a4Width * scale,
                         height: a4Height * scale,
@@ -533,18 +530,23 @@
                             height: `${a4Height}px`
                         }
                     })
-                    .then(function (dataUrl) {
+                    .then(async function (dataUrl) {
                         const { jsPDF } = window.jspdf;
                         const pdf = new jsPDF('p', 'pt', 'a4'); 
                         const pdfWidth = pdf.internal.pageSize.getWidth();
                         const pdfHeight = pdf.internal.pageSize.getHeight();
                         
-                        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                        pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight);
                         const pdfBlob = pdf.output('blob');
+                        
+                        // ডিসপ্লেতে সাথে সাথে দেখানোর জন্য ছবিটির Blob তৈরি করা
+                        const imgBlob = await (await fetch(dataUrl)).blob();
 
                         const formData = new FormData();
-                        formData.append('pdfFile', pdfBlob, filename);
                         formData.append('customFilename', filename);
+                        formData.append('customImgFilename', imgFilename);
+                        formData.append('pdfFile', pdfBlob, filename);
+                        formData.append('imgFile', imgBlob, imgFilename);
 
                         fetch('/upload-custom', {
                             method: 'POST',
