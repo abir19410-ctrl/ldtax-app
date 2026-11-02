@@ -16,30 +16,40 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/');
     },
     filename: function (req, file, cb) {
-        if (file.fieldname === 'pdfFile') {
-            cb(null, req.body.customFilename || file.originalname);
-        } else if (file.fieldname === 'imgFile') {
-            cb(null, req.body.customImgFilename || file.originalname);
-        } else {
-            cb(null, file.originalname);
-        }
+        cb(null, req.body.customFilename || file.originalname);
     }
 });
-const upload = multer({ storage: storage });
+
+// বড় ফাইল ও ছবির ডাটা যাতে আটকে না যায় সেজন্য ৫০ মেগাবাইট লিমিট দেওয়া হলো
+const upload = multer({ 
+    storage: storage,
+    limits: { fieldSize: 50 * 1024 * 1024, fileSize: 50 * 1024 * 1024 }
+});
 
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ফাইল মেকার থেকে পিডিএফ এবং ছবি দুটোই রিসিভ করার রাউট
-app.post('/upload-custom', upload.fields([{ name: 'pdfFile', maxCount: 1 }, { name: 'imgFile', maxCount: 1 }]), (req, res) => {
-    if (!req.files || !req.files['pdfFile']) {
+app.post('/upload-custom', upload.single('pdfFile'), (req, res) => {
+    if (!req.file) {
         return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
-    const pdfFilename = req.files['pdfFile'][0].filename;
+    
+    const pdfFilename = req.file.filename;
+    
+    // ছবির ডাটাকে সাথে সাথে .jpg ফাইল হিসেবে সেভ করা হচ্ছে যেনো স্ক্যান করলে ০.১ সেকেন্ডে ওপেন হয়
+    if (req.body.imgData) {
+        try {
+            const base64Data = req.body.imgData.replace(/^data:image\/jpeg;base64,/, "");
+            const imgFilename = pdfFilename.replace('.pdf', '.jpg');
+            fs.writeFileSync(path.join(__dirname, 'uploads', imgFilename), base64Data, 'base64');
+        } catch (e) {
+            console.error("Image save error:", e);
+        }
+    }
+    
     res.json({ success: true, url: `/view/${pdfFilename}` });
 });
 
-// ম্যানুয়াল পিডিএফ আপলোড করার রাউট (QR Generator পেজের জন্য)
 app.post('/upload', upload.single('pdfFile'), (req, res) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded');
@@ -51,7 +61,6 @@ app.get('/view/:filename', (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(__dirname, 'uploads', filename);
     
-    // পিডিএফ ফাইলের নামের সাথে মিল রেখে ছবির নাম বের করা
     const imgFilename = filename.replace('.pdf', '.jpg');
     const imgPath = path.join(__dirname, 'uploads', imgFilename);
     const hasImage = fs.existsSync(imgPath);
@@ -109,10 +118,7 @@ app.get('/view/:filename', (req, res) => {
                 .print-btn { background-color: #3b82f6; color: white; border: none; padding: 8px 25px; border-radius: 4px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
                 
                 #pdf-container { background-color: white; box-shadow: 0 0 15px rgba(0,0,0,0.15); margin: 0 auto; width: 100%; max-width: 820px; overflow: hidden; border-radius: 4px; }
-                
-                /* রসিদের ছবি একদম ফাস্ট ও ক্লিয়ার দেখানোর স্টাইল */
                 .receipt-img { width: 100%; height: auto; display: block; }
-                .fast-pdf-frame { width: 100%; height: 1000px; border: none; display: block; }
                 
                 @media (max-width: 768px) { 
                     .desktop-header { display: none; } 
@@ -124,7 +130,6 @@ app.get('/view/:filename', (req, res) => {
                     .footer-col { margin-bottom: 20px; } 
                 }
                 
-                /* প্রিন্ট করার সময় যেন শুধুমাত্র রসিদটিই প্রিন্ট হয়, ওয়েবসাইটের মেনু বা ফুটার যেন না আসে */
                 @media print {
                     body * { visibility: hidden; }
                     #pdf-container, #pdf-container * { visibility: visible; }
@@ -198,11 +203,10 @@ app.get('/view/:filename', (req, res) => {
                         <button class="print-btn" onclick="printPdf()"><i class="fas fa-print"></i> প্রিন্ট</button>
                     </div>
                     
-                    <!-- আপডেট: সাথে সাথে রসিদ দেখানোর জন্য সরাসরি Image রেন্ডার করা হচ্ছে -->
                     <div id="pdf-container">
                         ${hasImage 
                             ? `<img src="/uploads/${imgFilename}" class="receipt-img" alt="ভূমি উন্নয়ন কর রসিদ">` 
-                            : `<iframe src="/uploads/${filename}#toolbar=0&view=FitH" class="fast-pdf-frame"></iframe>`
+                            : `<embed src="/uploads/${filename}#toolbar=0&view=FitH" type="application/pdf" width="100%" height="800px" />`
                         }
                     </div>
                     
@@ -288,13 +292,11 @@ app.get('/view/:filename', (req, res) => {
                 const pdfUrl = '/uploads/${filename}';
                 
                 function printPdf() {
-                    // মোবাইল ডিভাইসে সরাসরি পিডিএফ ট্যাব ওপেন হবে অথবা প্রিন্ট হবে
                     if (window.innerWidth <= 768) {
                         window.open(pdfUrl, '_blank');
                         return;
                     }
                     
-                    // পিসিতে সরাসরি প্রিন্ট ডায়ালগ ওপেন হবে
                     let iframe = document.getElementById('print-iframe');
                     if (!iframe) {
                         iframe = document.createElement('iframe');
