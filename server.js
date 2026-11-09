@@ -6,10 +6,10 @@ const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// আপনার আসল Firebase Realtime Database লিংক (শেষে কোনো স্ল্যাশ থাকবে না)
-const FIREBASE_DB_URL = "https://land-c9a3a-default-rtdb.firebaseio.com";
+// আপনার স্ক্রিনশট অনুযায়ী সঠিক Firebase Realtime Database লিংক বসানো হয়েছে
+const FIREBASE_DB_URL = "https://land-c9a3a-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-// ৯০ দিনের মেয়াদ (মিলিসেকেন্ডে হিসাব: ৯০ দিন × ২৪ ঘণ্টা × ৬০ মিনিট × ৬০ সেকেন্ড × ১০০০)
+// ৯০ দিনের মেয়াদ (মিলিসেকেন্ডে হিসাব: ৯০ দিন × ২৪ ঘণ্টা × ৬০ মিনিট × ৬০ সেকেন্ড × ১০০০)
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 
 const uploadDir = path.join(__dirname, 'uploads');
@@ -36,7 +36,7 @@ const upload = multer({
 
 app.use(express.static('public'));
 
-// সরাসরি প্রিন্ট বা পিডিএফ লিংকে গেলে এবং লোকাল ফোল্ডারে ফাইল না থাকলে ক্লাউড থেকে রিকভার করার মিডলওয়্যার
+// লোকাল ফোল্ডারে ফাইল না থাকলে ক্লাউড থেকে অটো-রিকভার করার মিডলওয়্যার
 app.use('/uploads/:filename', async (req, res, next) => {
     const filename = req.params.filename;
     const filePath = path.join(uploadDir, filename);
@@ -51,7 +51,7 @@ app.use('/uploads/:filename', async (req, res, next) => {
 
 app.use('/uploads', express.static(uploadDir));
 
-// ফায়ারবেসে ডাটা সেভ করার ফাংশন (৯০ দিনের টাইমস্ট্যাম্পসহ)
+// ফায়ারবেসে ডাটা সেভ করার ফাংশন (৯০ দিনের জন্য)
 async function saveToCloud(fileKey, pdfBase64, imgBase64) {
     if (!FIREBASE_DB_URL) return false;
     try {
@@ -80,7 +80,7 @@ async function saveToCloud(fileKey, pdfBase64, imgBase64) {
     }
 }
 
-// ফায়ারবেস থেকে মেয়াদোত্তীর্ণ ডাটা মুছে ফেলার ফাংশন
+// ৯০ দিন পর ফায়ারবেস থেকে মেয়াদোত্তীর্ণ ডাটা অটো ডিলিট করার ফাংশন
 async function deleteFromCloud(fileKey) {
     if (!FIREBASE_DB_URL) return;
     try {
@@ -93,7 +93,7 @@ async function deleteFromCloud(fileKey) {
     }
 }
 
-// ফায়ারবেস থেকে ডাটা রিকভার ও ৯০ দিনের মেয়াদ চেক করার ফাংশন
+// ফায়ারবেস থেকে ডাটা রিকভার ও ৯০ দিনের মেয়াদ চেক করার ফাংশন
 async function restoreFromCloud(fileKey, pdfPath, imgPath) {
     if (!FIREBASE_DB_URL) return 'NOT_FOUND';
     try {
@@ -103,7 +103,7 @@ async function restoreFromCloud(fileKey, pdfPath, imgPath) {
         const data = await response.json();
         if (!data) return 'NOT_FOUND';
 
-        // ৯০ দিন পার হয়েছে কি না তা চেক করা হচ্ছে
+        // ৯০ দিন পার হয়েছে কি না তা চেক করা হচ্ছে
         const createdTime = data.createdAt || 0;
         if (createdTime > 0 && (Date.now() - createdTime > NINETY_DAYS_MS)) {
             await deleteFromCloud(fileKey);
@@ -146,8 +146,13 @@ app.post('/upload-custom', upload.single('pdfFile'), async (req, res) => {
         }
     }
 
+    // পিডিএফ ও ছবি Base64 করে ফায়ারবেসে ব্যাকআপ রাখা এবং সেভ নিশ্চিত করা
     const pdfBase64 = fs.readFileSync(pdfPath).toString('base64');
-    await saveToCloud(fileKey, pdfBase64, imgBase64);
+    const isSaved = await saveToCloud(fileKey, pdfBase64, imgBase64);
+    
+    if (!isSaved) {
+        return res.status(500).json({ success: false, message: 'Firebase save failed' });
+    }
     
     res.json({ success: true, url: `/view/${pdfFilename}` });
 });
@@ -177,7 +182,7 @@ app.get('/view/:filename', async (req, res) => {
     let hasPdf = fs.existsSync(filePath);
     let hasImage = fs.existsSync(imgPath);
 
-    // যদি লোকাল ফাইলেই থাকে, তবুও ৯০ দিন পার হয়েছে কি না চেক করা
+    // লোকাল ফোল্ডারে ফাইল থাকলেও ৯০ দিন পার হয়েছে কি না তা চেক করা
     if (hasPdf || hasImage) {
         const targetCheck = hasPdf ? filePath : imgPath;
         const stats = fs.statSync(targetCheck);
@@ -185,15 +190,15 @@ app.get('/view/:filename', async (req, res) => {
             if (hasPdf) fs.unlinkSync(filePath);
             if (hasImage) fs.unlinkSync(imgPath);
             await deleteFromCloud(fileKey);
-            return res.status(410).send('<h2 style="text-align:center; color:red; margin-top:50px;">এই রসিদটির মেয়াদ (৯০ দিন) উত্তীর্ণ হয়ে গেছে!</h2>');
+            return res.status(410).send('<h2 style="text-align:center; color:red; margin-top:50px;">এই রসিদটির মেয়াদ (৯০ দিন) উত্তীর্ণ হয়ে গেছে!</h2>');
         }
     }
 
-    // যদি সার্ভার রিস্টার্ট নেওয়ার কারণে ফাইল মুছে গিয়ে থাকে, তবে ফায়ারবেস থেকে রিকভার করবে
+    // যদি সার্ভার রিস্টার্ট নেওয়ার কারণে ফাইল মুছে গিয়ে থাকে, তবে ফায়ারবেস থেকে সাথে সাথে রিকভার করবে
     if (!hasPdf && !hasImage) {
         const status = await restoreFromCloud(fileKey, filePath, imgPath);
         if (status === 'EXPIRED') {
-            return res.status(410).send('<h2 style="text-align:center; color:red; margin-top:50px;">এই রসিদটির মেয়াদ (৯০ দিন) উত্তীর্ণ হয়ে গেছে!</h2>');
+            return res.status(410).send('<h2 style="text-align:center; color:red; margin-top:50px;">এই রসিদটির মেয়াদ (৯০ দিন) উত্তীর্ণ হয়ে গেছে!</h2>');
         }
         if (status === 'RESTORED') {
             hasPdf = fs.existsSync(filePath);
