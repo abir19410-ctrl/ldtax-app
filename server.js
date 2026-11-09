@@ -6,9 +6,8 @@ const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// এখানে আপনার Firebase Realtime Database এর লিংকটি বসান (শেষে স্ল্যাশ / দিবেন না)
-// উদাহরণ: const FIREBASE_DB_URL = "https://my-project-default-rtdb.firebaseio.com";
-const FIREBASE_DB_URL = "https://console.firebase.google.com/project/land-c9a3a/database/land-c9a3a-default-rtdb/data/~2F?fb_utm_campaign=Cloud-SS-DR-Firebase-FY26-global-gsem-1713590&fb_utm_content=text-ad&fb_utm_medium=cpc&fb_utm_source=google&fb_utm_term=KW_firebase&fb_gclid=Cj0KCQiA-8XXBhDaARIsADnEOrAnK6xZ2vE7dQAqsjale-GYFY9aNWBbNqYTdrNapbisCFYDj_owPkcaAo7SEALw_wcB";
+// আপনার আসল Firebase Realtime Database লিংক বসানো হয়েছে
+const FIREBASE_DB_URL = "https://land-c9a3a-default-rtdb.firebaseio.com";
 
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -37,7 +36,7 @@ app.use('/uploads', express.static(uploadDir));
 
 // ফায়ারবেসে ডাটা সেভ করার ফাংশন (২-৩ মাস স্থায়ী রাখার জন্য)
 async function saveToCloud(fileKey, pdfBase64, imgBase64) {
-    if (!FIREBASE_DB_URL || FIREBASE_DB_URL.includes("YOUR_FIREBASE")) return;
+    if (!FIREBASE_DB_URL) return;
     try {
         await fetch(`${FIREBASE_DB_URL}/receipts/${fileKey}.json`, {
             method: 'PUT',
@@ -55,7 +54,7 @@ async function saveToCloud(fileKey, pdfBase64, imgBase64) {
 
 // ফায়ারবেস থেকে ডাটা রিকভার করার ফাংশন (সার্ভার রিস্টার্ট নিলে অটোমেটিক কাজ করবে)
 async function restoreFromCloud(fileKey, pdfPath, imgPath) {
-    if (!FIREBASE_DB_URL || FIREBASE_DB_URL.includes("YOUR_FIREBASE")) return false;
+    if (!FIREBASE_DB_URL) return false;
     try {
         const response = await fetch(`${FIREBASE_DB_URL}/receipts/${fileKey}.json`);
         const data = await response.json();
@@ -95,7 +94,7 @@ app.post('/upload-custom', upload.single('pdfFile'), async (req, res) => {
         }
     }
 
-    // পিডিএফ ফাইলটিকেও Base64 করে ক্লাউডে ব্যাকআপ রাখা হচ্ছে
+    // পিডিএফ ফাইলটিকেও Base64 করে ফায়ারবেসে ব্যাকআপ রাখা হচ্ছে
     const pdfBase64 = fs.readFileSync(pdfPath).toString('base64');
     await saveToCloud(fileKey, pdfBase64, imgBase64);
     
@@ -127,7 +126,7 @@ app.get('/view/:filename', async (req, res) => {
     let hasPdf = fs.existsSync(filePath);
     let hasImage = fs.existsSync(imgPath);
 
-    // যদি Render সার্ভার রিস্টার্ট নেওয়ার কারণে ফাইল মুছে গিয়ে থাকে, তবে ক্লাউড থেকে সাথে সাথে রিকভার করবে
+    // যদি Render সার্ভার রিস্টার্ট নেওয়ার কারণে ফাইল মুছে গিয়ে থাকে, তবে ফায়ারবেস থেকে সাথে সাথে রিকভার করবে
     if (!hasPdf && !hasImage) {
         const restored = await restoreFromCloud(fileKey, filePath, imgPath);
         if (restored) {
