@@ -6,8 +6,11 @@ const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// আপনার আসল Firebase Realtime Database লিংক বসানো হয়েছে
+// আপনার আসল Firebase Realtime Database লিংক (শেষে কোনো স্ল্যাশ থাকবে না)
 const FIREBASE_DB_URL = "https://land-c9a3a-default-rtdb.firebaseio.com";
+
+// ৯০ দিনের মেয়াদ (মিলিসেকেন্ডে হিসাব: ৯০ দিন × ২৪ ঘণ্টা × ৬০ মিনিট × ৬০ সেকেন্ড × ১০০০)
+const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -32,33 +35,82 @@ const upload = multer({
 });
 
 app.use(express.static('public'));
+
+// সরাসরি প্রিন্ট বা পিডিএফ লিংকে গেলে এবং লোকাল ফোল্ডারে ফাইল না থাকলে ক্লাউড থেকে রিকভার করার মিডলওয়্যার
+app.use('/uploads/:filename', async (req, res, next) => {
+    const filename = req.params.filename;
+    const filePath = path.join(uploadDir, filename);
+    if (!fs.existsSync(filePath)) {
+        const fileKey = filename.replace(/\.[^/.]+$/, "");
+        const pdfPath = path.join(uploadDir, fileKey + '.pdf');
+        const imgPath = path.join(uploadDir, fileKey + '.jpg');
+        await restoreFromCloud(fileKey, pdfPath, imgPath);
+    }
+    next();
+});
+
 app.use('/uploads', express.static(uploadDir));
 
-// ফায়ারবেসে ডাটা সেভ করার ফাংশন (২-৩ মাস স্থায়ী রাখার জন্য)
+// ফায়ারবেসে ডাটা সেভ করার ফাংশন (৯০ দিনের টাইমস্ট্যাম্পসহ)
 async function saveToCloud(fileKey, pdfBase64, imgBase64) {
-    if (!FIREBASE_DB_URL) return;
+    if (!FIREBASE_DB_URL) return false;
     try {
-        await fetch(`${FIREBASE_DB_URL}/receipts/${fileKey}.json`, {
+        const now = Date.now();
+        const response = await fetch(`${FIREBASE_DB_URL}/receipts/${fileKey}.json`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 pdf: pdfBase64,
                 img: imgBase64,
-                createdAt: Date.now()
+                createdAt: now,
+                expiresAt: now + NINETY_DAYS_MS
             })
         });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error(`Firebase Save Failed (${response.status}):`, errText);
+            return false;
+        }
+        console.log(`Successfully saved ${fileKey} to Firebase!`);
+        return true;
     } catch (err) {
         console.error("Cloud Save Error:", err);
+        return false;
     }
 }
 
-// ফায়ারবেস থেকে ডাটা রিকভার করার ফাংশন (সার্ভার রিস্টার্ট নিলে অটোমেটিক কাজ করবে)
+// ফায়ারবেস থেকে মেয়াদোত্তীর্ণ ডাটা মুছে ফেলার ফাংশন
+async function deleteFromCloud(fileKey) {
+    if (!FIREBASE_DB_URL) return;
+    try {
+        await fetch(`${FIREBASE_DB_URL}/receipts/${fileKey}.json`, {
+            method: 'DELETE'
+        });
+        console.log(`Expired receipt ${fileKey} deleted from Firebase.`);
+    } catch (err) {
+        console.error("Cloud Delete Error:", err);
+    }
+}
+
+// ফায়ারবেস থেকে ডাটা রিকভার ও ৯০ দিনের মেয়াদ চেক করার ফাংশন
 async function restoreFromCloud(fileKey, pdfPath, imgPath) {
-    if (!FIREBASE_DB_URL) return false;
+    if (!FIREBASE_DB_URL) return 'NOT_FOUND';
     try {
         const response = await fetch(`${FIREBASE_DB_URL}/receipts/${fileKey}.json`);
+        if (!response.ok) return 'NOT_FOUND';
+
         const data = await response.json();
-        if (!data) return false;
+        if (!data) return 'NOT_FOUND';
+
+        // ৯০ দিন পার হয়েছে কি না তা চেক করা হচ্ছে
+        const createdTime = data.createdAt || 0;
+        if (createdTime > 0 && (Date.now() - createdTime > NINETY_DAYS_MS)) {
+            await deleteFromCloud(fileKey);
+            if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
+            if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
+            return 'EXPIRED';
+        }
 
         if (data.pdf) {
             fs.writeFileSync(pdfPath, data.pdf, 'base64');
@@ -66,10 +118,10 @@ async function restoreFromCloud(fileKey, pdfPath, imgPath) {
         if (data.img) {
             fs.writeFileSync(imgPath, data.img, 'base64');
         }
-        return true;
+        return 'RESTORED';
     } catch (err) {
         console.error("Cloud Restore Error:", err);
-        return false;
+        return 'NOT_FOUND';
     }
 }
 
@@ -94,7 +146,6 @@ app.post('/upload-custom', upload.single('pdfFile'), async (req, res) => {
         }
     }
 
-    // পিডিএফ ফাইলটিকেও Base64 করে ফায়ারবেসে ব্যাকআপ রাখা হচ্ছে
     const pdfBase64 = fs.readFileSync(pdfPath).toString('base64');
     await saveToCloud(fileKey, pdfBase64, imgBase64);
     
@@ -126,10 +177,25 @@ app.get('/view/:filename', async (req, res) => {
     let hasPdf = fs.existsSync(filePath);
     let hasImage = fs.existsSync(imgPath);
 
-    // যদি Render সার্ভার রিস্টার্ট নেওয়ার কারণে ফাইল মুছে গিয়ে থাকে, তবে ফায়ারবেস থেকে সাথে সাথে রিকভার করবে
+    // যদি লোকাল ফাইলেই থাকে, তবুও ৯০ দিন পার হয়েছে কি না চেক করা
+    if (hasPdf || hasImage) {
+        const targetCheck = hasPdf ? filePath : imgPath;
+        const stats = fs.statSync(targetCheck);
+        if (Date.now() - stats.mtimeMs > NINETY_DAYS_MS) {
+            if (hasPdf) fs.unlinkSync(filePath);
+            if (hasImage) fs.unlinkSync(imgPath);
+            await deleteFromCloud(fileKey);
+            return res.status(410).send('<h2 style="text-align:center; color:red; margin-top:50px;">এই রসিদটির মেয়াদ (৯০ দিন) উত্তীর্ণ হয়ে গেছে!</h2>');
+        }
+    }
+
+    // যদি সার্ভার রিস্টার্ট নেওয়ার কারণে ফাইল মুছে গিয়ে থাকে, তবে ফায়ারবেস থেকে রিকভার করবে
     if (!hasPdf && !hasImage) {
-        const restored = await restoreFromCloud(fileKey, filePath, imgPath);
-        if (restored) {
+        const status = await restoreFromCloud(fileKey, filePath, imgPath);
+        if (status === 'EXPIRED') {
+            return res.status(410).send('<h2 style="text-align:center; color:red; margin-top:50px;">এই রসিদটির মেয়াদ (৯০ দিন) উত্তীর্ণ হয়ে গেছে!</h2>');
+        }
+        if (status === 'RESTORED') {
             hasPdf = fs.existsSync(filePath);
             hasImage = fs.existsSync(imgPath);
         }
