@@ -6,66 +6,137 @@ const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// এখানে আপনার Firebase Realtime Database এর লিংকটি বসান (শেষে স্ল্যাশ / দিবেন না)
+// উদাহরণ: const FIREBASE_DB_URL = "https://my-project-default-rtdb.firebaseio.com";
+const FIREBASE_DB_URL = "YOUR_FIREBASE_DATABASE_URL_HERE";
+
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
+    fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/');
+        cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        cb(null, req.body.customFilename || file.originalname);
+        const finalName = file.originalname && file.originalname !== 'blob' 
+            ? file.originalname 
+            : (req.body.customFilename || 'LDTax_' + Date.now() + '.pdf');
+        cb(null, finalName);
     }
 });
 
-// বড় ফাইল ও ছবির ডাটা যাতে আটকে না যায় সেজন্য ৫০ মেগাবাইট লিমিট দেওয়া হলো
 const upload = multer({ 
     storage: storage,
     limits: { fieldSize: 50 * 1024 * 1024, fileSize: 50 * 1024 * 1024 }
 });
 
 app.use(express.static('public'));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(uploadDir));
 
-app.post('/upload-custom', upload.single('pdfFile'), (req, res) => {
+// ফায়ারবেসে ডাটা সেভ করার ফাংশন (২-৩ মাস স্থায়ী রাখার জন্য)
+async function saveToCloud(fileKey, pdfBase64, imgBase64) {
+    if (!FIREBASE_DB_URL || FIREBASE_DB_URL.includes("YOUR_FIREBASE")) return;
+    try {
+        await fetch(`${FIREBASE_DB_URL}/receipts/${fileKey}.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                pdf: pdfBase64,
+                img: imgBase64,
+                createdAt: Date.now()
+            })
+        });
+    } catch (err) {
+        console.error("Cloud Save Error:", err);
+    }
+}
+
+// ফায়ারবেস থেকে ডাটা রিকভার করার ফাংশন (সার্ভার রিস্টার্ট নিলে অটোমেটিক কাজ করবে)
+async function restoreFromCloud(fileKey, pdfPath, imgPath) {
+    if (!FIREBASE_DB_URL || FIREBASE_DB_URL.includes("YOUR_FIREBASE")) return false;
+    try {
+        const response = await fetch(`${FIREBASE_DB_URL}/receipts/${fileKey}.json`);
+        const data = await response.json();
+        if (!data) return false;
+
+        if (data.pdf) {
+            fs.writeFileSync(pdfPath, data.pdf, 'base64');
+        }
+        if (data.img) {
+            fs.writeFileSync(imgPath, data.img, 'base64');
+        }
+        return true;
+    } catch (err) {
+        console.error("Cloud Restore Error:", err);
+        return false;
+    }
+}
+
+app.post('/upload-custom', upload.single('pdfFile'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
     
     const pdfFilename = req.file.filename;
-    
-    // ছবির ডাটাকে সাথে সাথে .jpg ফাইল হিসেবে সেভ করা হচ্ছে যেনো স্ক্যান করলে ০.১ সেকেন্ডে ওপেন হয়
+    const fileKey = pdfFilename.replace('.pdf', '');
+    const pdfPath = path.join(uploadDir, pdfFilename);
+    const imgFilename = fileKey + '.jpg';
+    const imgPath = path.join(uploadDir, imgFilename);
+
+    let imgBase64 = null;
     if (req.body.imgData) {
         try {
-            const base64Data = req.body.imgData.replace(/^data:image\/jpeg;base64,/, "");
-            const imgFilename = pdfFilename.replace('.pdf', '.jpg');
-            fs.writeFileSync(path.join(__dirname, 'uploads', imgFilename), base64Data, 'base64');
+            imgBase64 = req.body.imgData.replace(/^data:image\/\w+;base64,/, "");
+            fs.writeFileSync(imgPath, imgBase64, 'base64');
         } catch (e) {
             console.error("Image save error:", e);
         }
     }
+
+    // পিডিএফ ফাইলটিকেও Base64 করে ক্লাউডে ব্যাকআপ রাখা হচ্ছে
+    const pdfBase64 = fs.readFileSync(pdfPath).toString('base64');
+    await saveToCloud(fileKey, pdfBase64, imgBase64);
     
     res.json({ success: true, url: `/view/${pdfFilename}` });
 });
 
-app.post('/upload', upload.single('pdfFile'), (req, res) => {
+app.post('/upload', upload.single('pdfFile'), async (req, res) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded');
     }
-    res.redirect(`/view/${req.file.filename}`);
+    const pdfFilename = req.file.filename;
+    const fileKey = pdfFilename.replace(/\.[^/.]+$/, "");
+    const pdfPath = path.join(uploadDir, pdfFilename);
+    
+    const pdfBase64 = fs.readFileSync(pdfPath).toString('base64');
+    await saveToCloud(fileKey, pdfBase64, null);
+
+    res.redirect(`/view/${pdfFilename}`);
 });
 
-app.get('/view/:filename', (req, res) => {
+app.get('/view/:filename', async (req, res) => {
     const filename = req.params.filename;
-    const filePath = path.join(__dirname, 'uploads', filename);
+    const fileKey = filename.replace(/\.[^/.]+$/, "");
+    const filePath = path.join(uploadDir, filename);
     
-    const imgFilename = filename.replace('.pdf', '.jpg');
-    const imgPath = path.join(__dirname, 'uploads', imgFilename);
-    const hasImage = fs.existsSync(imgPath);
+    const imgFilename = fileKey + '.jpg';
+    const imgPath = path.join(uploadDir, imgFilename);
     
-    if (fs.existsSync(filePath)) {
+    let hasPdf = fs.existsSync(filePath);
+    let hasImage = fs.existsSync(imgPath);
+
+    // যদি Render সার্ভার রিস্টার্ট নেওয়ার কারণে ফাইল মুছে গিয়ে থাকে, তবে ক্লাউড থেকে সাথে সাথে রিকভার করবে
+    if (!hasPdf && !hasImage) {
+        const restored = await restoreFromCloud(fileKey, filePath, imgPath);
+        if (restored) {
+            hasPdf = fs.existsSync(filePath);
+            hasImage = fs.existsSync(imgPath);
+        }
+    }
+    
+    if (hasPdf || hasImage) {
         res.send(`
         <!DOCTYPE html>
         <html lang="bn">
@@ -280,10 +351,10 @@ app.get('/view/:filename', (req, res) => {
                     
                     if (lang === 'bn') {
                         bnBtns.forEach(btn => { btn.classList.add('active'); btn.classList.remove('inactive'); });
-                        enBtns.forEach(btn => { btn.classList.add('inactive'); btn.classList.remove('active'); });
+                        enBtns.forEach(btn => { btn.classList.remove('active'); btn.classList.add('inactive'); });
                     } else if (lang === 'en') {
                         enBtns.forEach(btn => { btn.classList.add('active'); btn.classList.remove('inactive'); });
-                        bnBtns.forEach(btn => { btn.classList.add('inactive'); btn.classList.remove('active'); });
+                        bnBtns.forEach(btn => { btn.classList.remove('active'); btn.classList.add('inactive'); });
                         
                         alert("The English version is currently under construction. Please use the Bengali version.");
                     }
