@@ -8,7 +8,7 @@ const port = process.env.PORT || 3000;
 
 // এখানে আপনার Firebase Realtime Database এর লিংকটি বসান (শেষে স্ল্যাশ / দিবেন না)
 // উদাহরণ: const FIREBASE_DB_URL = "https://my-project-default-rtdb.firebaseio.com";
-const FIREBASE_DB_URL = "YOUR_FIREBASE_DATABASE_URL_HERE";
+const FIREBASE_DB_URL = "https://console.firebase.google.com/project/land-c9a3a/database/land-c9a3a-default-rtdb/data/~2F?fb_utm_campaign=Cloud-SS-DR-Firebase-FY26-global-gsem-1713590&fb_utm_content=text-ad&fb_utm_medium=cpc&fb_utm_source=google&fb_utm_term=KW_firebase&fb_gclid=Cj0KCQiA-8XXBhDaARIsADnEOrAnK6xZ2vE7dQAqsjale-GYFY9aNWBbNqYTdrNapbisCFYDj_owPkcaAo7SEALw_wcB";
 
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
