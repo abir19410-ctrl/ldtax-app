@@ -2,11 +2,12 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// আপনার স্ক্রিনশট অনুযায়ী সঠিক Firebase Realtime Database লিংক বসানো হয়েছে
+// আপনার সঠিক Firebase Realtime Database লিংক
 const FIREBASE_DB_URL = "https://land-c9a3a-default-rtdb.asia-southeast1.firebasedatabase.app";
 
 // ৯০ দিনের মেয়াদ (মিলিসেকেন্ডে হিসাব: ৯০ দিন × ২৪ ঘণ্টা × ৬০ মিনিট × ৬০ সেকেন্ড × ১০০০)
@@ -15,6 +16,47 @@ const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// ফায়ারবেস কী (Key) থেকে নিষিদ্ধ ক্যারেক্টার পরিষ্কার করার ফাংশন
+function cleanFirebaseKey(key) {
+    return key.replace(/\.pdf$/i, '').replace(/\.jpg$/i, '').replace(/[.#$\[\]\s\/]/g, '_');
+}
+
+// যেকোনো Node.js ভার্সনে ফায়ারবেসে রিকোয়েস্ট পাঠানোর নিরাপদ ফাংশন
+function firebaseRequest(method, dbPath, payload = null) {
+    return new Promise((resolve, reject) => {
+        const url = new URL(`${FIREBASE_DB_URL}${dbPath}`);
+        const options = {
+            hostname: url.hostname,
+            path: url.pathname + url.search,
+            method: method,
+            headers: { 'Content-Type': 'application/json' }
+        };
+
+        const req = https.request(options, (res) => {
+            let responseBody = '';
+            res.on('data', (chunk) => { responseBody += chunk; });
+            res.on('end', () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    try {
+                        resolve(responseBody ? JSON.parse(responseBody) : null);
+                    } catch (e) {
+                        resolve(responseBody);
+                    }
+                } else {
+                    reject(new Error(`HTTP ${res.statusCode}: ${responseBody}`));
+                }
+            });
+        });
+
+        req.on('error', (err) => reject(err));
+
+        if (payload) {
+            req.write(JSON.stringify(payload));
+        }
+        req.end();
+    });
 }
 
 const storage = multer.diskStorage({
@@ -36,46 +78,49 @@ const upload = multer({
 
 app.use(express.static('public'));
 
-// লোকাল ফোল্ডারে ফাইল না থাকলে ক্লাউড থেকে অটো-রিকভার করার মিডলওয়্যার
-app.use('/uploads/:filename', async (req, res, next) => {
+// প্রিন্ট বা ডিরেক্ট ফাইল লিংকে গেলে লোকাল ফোল্ডারে না থাকলে ফায়ারবেস থেকে সরাসরি ফাইল দেওয়া
+app.get('/uploads/:filename', async (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(uploadDir, filename);
-    if (!fs.existsSync(filePath)) {
-        const fileKey = filename.replace(/\.[^/.]+$/, "");
-        const pdfPath = path.join(uploadDir, fileKey + '.pdf');
-        const imgPath = path.join(uploadDir, fileKey + '.jpg');
-        await restoreFromCloud(fileKey, pdfPath, imgPath);
-    }
-    next();
-});
 
-app.use('/uploads', express.static(uploadDir));
+    if (fs.existsSync(filePath)) {
+        return res.sendFile(filePath);
+    }
+
+    const fileKey = cleanFirebaseKey(filename);
+    const cloudResult = await getFromCloud(fileKey);
+
+    if (cloudResult.status === 'FOUND' && cloudResult.data) {
+        if (filename.endsWith('.jpg') && cloudResult.data.img) {
+            const imgBuffer = Buffer.from(cloudResult.data.img, 'base64');
+            res.setHeader('Content-Type', 'image/jpeg');
+            return res.send(imgBuffer);
+        }
+        if (filename.endsWith('.pdf') && cloudResult.data.pdf) {
+            const pdfBuffer = Buffer.from(cloudResult.data.pdf, 'base64');
+            res.setHeader('Content-Type', 'application/pdf');
+            return res.send(pdfBuffer);
+        }
+    }
+    res.status(404).send('File not found');
+});
 
 // ফায়ারবেসে ডাটা সেভ করার ফাংশন (৯০ দিনের জন্য)
 async function saveToCloud(fileKey, pdfBase64, imgBase64) {
     if (!FIREBASE_DB_URL) return false;
     try {
+        const cleanKey = cleanFirebaseKey(fileKey);
         const now = Date.now();
-        const response = await fetch(`${FIREBASE_DB_URL}/receipts/${fileKey}.json`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                pdf: pdfBase64,
-                img: imgBase64,
-                createdAt: now,
-                expiresAt: now + NINETY_DAYS_MS
-            })
+        await firebaseRequest('PUT', `/receipts/${cleanKey}.json`, {
+            pdf: pdfBase64,
+            img: imgBase64,
+            createdAt: now,
+            expiresAt: now + NINETY_DAYS_MS
         });
-
-        if (!response.ok) {
-            const errText = await response.text();
-            console.error(`Firebase Save Failed (${response.status}):`, errText);
-            return false;
-        }
-        console.log(`Successfully saved ${fileKey} to Firebase!`);
+        console.log(`Successfully saved ${cleanKey} to Firebase!`);
         return true;
     } catch (err) {
-        console.error("Cloud Save Error:", err);
+        console.error("Cloud Save Error:", err.message);
         return false;
     }
 }
@@ -84,44 +129,40 @@ async function saveToCloud(fileKey, pdfBase64, imgBase64) {
 async function deleteFromCloud(fileKey) {
     if (!FIREBASE_DB_URL) return;
     try {
-        await fetch(`${FIREBASE_DB_URL}/receipts/${fileKey}.json`, {
-            method: 'DELETE'
-        });
-        console.log(`Expired receipt ${fileKey} deleted from Firebase.`);
+        const cleanKey = cleanFirebaseKey(fileKey);
+        await firebaseRequest('DELETE', `/receipts/${cleanKey}.json`);
     } catch (err) {
-        console.error("Cloud Delete Error:", err);
+        console.error("Cloud Delete Error:", err.message);
     }
 }
 
-// ফায়ারবেস থেকে ডাটা রিকভার ও ৯০ দিনের মেয়াদ চেক করার ফাংশন
-async function restoreFromCloud(fileKey, pdfPath, imgPath) {
-    if (!FIREBASE_DB_URL) return 'NOT_FOUND';
+// ফায়ারবেস থেকে ডাটা চেক ও রিকভার করার ফাংশন
+async function getFromCloud(fileKey) {
+    if (!FIREBASE_DB_URL) return { status: 'NOT_FOUND', data: null };
     try {
-        const response = await fetch(`${FIREBASE_DB_URL}/receipts/${fileKey}.json`);
-        if (!response.ok) return 'NOT_FOUND';
-
-        const data = await response.json();
-        if (!data) return 'NOT_FOUND';
+        const cleanKey = cleanFirebaseKey(fileKey);
+        const data = await firebaseRequest('GET', `/receipts/${cleanKey}.json`);
+        if (!data) return { status: 'NOT_FOUND', data: null };
 
         // ৯০ দিন পার হয়েছে কি না তা চেক করা হচ্ছে
         const createdTime = data.createdAt || 0;
         if (createdTime > 0 && (Date.now() - createdTime > NINETY_DAYS_MS)) {
-            await deleteFromCloud(fileKey);
-            if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
-            if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
-            return 'EXPIRED';
+            await deleteFromCloud(cleanKey);
+            return { status: 'EXPIRED', data: null };
         }
 
-        if (data.pdf) {
-            fs.writeFileSync(pdfPath, data.pdf, 'base64');
+        // লোকাল ফোল্ডারেও ক্যাশ হিসেবে সেভ করে রাখা
+        try {
+            if (data.pdf) fs.writeFileSync(path.join(uploadDir, cleanKey + '.pdf'), data.pdf, 'base64');
+            if (data.img) fs.writeFileSync(path.join(uploadDir, cleanKey + '.jpg'), data.img, 'base64');
+        } catch (e) {
+            console.error("Local cache write skipped:", e.message);
         }
-        if (data.img) {
-            fs.writeFileSync(imgPath, data.img, 'base64');
-        }
-        return 'RESTORED';
+
+        return { status: 'FOUND', data: data };
     } catch (err) {
-        console.error("Cloud Restore Error:", err);
-        return 'NOT_FOUND';
+        console.error("Cloud Restore Error:", err.message);
+        return { status: 'NOT_FOUND', data: null };
     }
 }
 
@@ -131,7 +172,7 @@ app.post('/upload-custom', upload.single('pdfFile'), async (req, res) => {
     }
     
     const pdfFilename = req.file.filename;
-    const fileKey = pdfFilename.replace('.pdf', '');
+    const fileKey = cleanFirebaseKey(pdfFilename);
     const pdfPath = path.join(uploadDir, pdfFilename);
     const imgFilename = fileKey + '.jpg';
     const imgPath = path.join(uploadDir, imgFilename);
@@ -146,13 +187,8 @@ app.post('/upload-custom', upload.single('pdfFile'), async (req, res) => {
         }
     }
 
-    // পিডিএফ ও ছবি Base64 করে ফায়ারবেসে ব্যাকআপ রাখা এবং সেভ নিশ্চিত করা
     const pdfBase64 = fs.readFileSync(pdfPath).toString('base64');
-    const isSaved = await saveToCloud(fileKey, pdfBase64, imgBase64);
-    
-    if (!isSaved) {
-        return res.status(500).json({ success: false, message: 'Firebase save failed' });
-    }
+    await saveToCloud(fileKey, pdfBase64, imgBase64);
     
     res.json({ success: true, url: `/view/${pdfFilename}` });
 });
@@ -162,7 +198,7 @@ app.post('/upload', upload.single('pdfFile'), async (req, res) => {
         return res.status(400).send('No file uploaded');
     }
     const pdfFilename = req.file.filename;
-    const fileKey = pdfFilename.replace(/\.[^/.]+$/, "");
+    const fileKey = cleanFirebaseKey(pdfFilename);
     const pdfPath = path.join(uploadDir, pdfFilename);
     
     const pdfBase64 = fs.readFileSync(pdfPath).toString('base64');
@@ -173,7 +209,7 @@ app.post('/upload', upload.single('pdfFile'), async (req, res) => {
 
 app.get('/view/:filename', async (req, res) => {
     const filename = req.params.filename;
-    const fileKey = filename.replace(/\.[^/.]+$/, "");
+    const fileKey = cleanFirebaseKey(filename);
     const filePath = path.join(uploadDir, filename);
     
     const imgFilename = fileKey + '.jpg';
@@ -181,8 +217,9 @@ app.get('/view/:filename', async (req, res) => {
     
     let hasPdf = fs.existsSync(filePath);
     let hasImage = fs.existsSync(imgPath);
+    let directImgSrc = `/uploads/${imgFilename}`;
 
-    // লোকাল ফোল্ডারে ফাইল থাকলেও ৯০ দিন পার হয়েছে কি না তা চেক করা
+    // লোকাল ফোল্ডারে ফাইল থাকলে ৯০ দিন পার হয়েছে কি না চেক করা
     if (hasPdf || hasImage) {
         const targetCheck = hasPdf ? filePath : imgPath;
         const stats = fs.statSync(targetCheck);
@@ -194,15 +231,20 @@ app.get('/view/:filename', async (req, res) => {
         }
     }
 
-    // যদি সার্ভার রিস্টার্ট নেওয়ার কারণে ফাইল মুছে গিয়ে থাকে, তবে ফায়ারবেস থেকে সাথে সাথে রিকভার করবে
+    // লোকাল ফোল্ডারে না থাকলে ফায়ারবেস থেকে সাথে সাথে ডাটা আনা
     if (!hasPdf && !hasImage) {
-        const status = await restoreFromCloud(fileKey, filePath, imgPath);
-        if (status === 'EXPIRED') {
+        const cloudResult = await getFromCloud(fileKey);
+        if (cloudResult.status === 'EXPIRED') {
             return res.status(410).send('<h2 style="text-align:center; color:red; margin-top:50px;">এই রসিদটির মেয়াদ (৯০ দিন) উত্তীর্ণ হয়ে গেছে!</h2>');
         }
-        if (status === 'RESTORED') {
-            hasPdf = fs.existsSync(filePath);
-            hasImage = fs.existsSync(imgPath);
+        if (cloudResult.status === 'FOUND' && cloudResult.data) {
+            if (cloudResult.data.img) {
+                hasImage = true;
+                directImgSrc = `data:image/jpeg;base64,${cloudResult.data.img}`;
+            }
+            if (cloudResult.data.pdf) {
+                hasPdf = true;
+            }
         }
     }
     
@@ -346,7 +388,7 @@ app.get('/view/:filename', async (req, res) => {
                     
                     <div id="pdf-container">
                         ${hasImage 
-                            ? `<img src="/uploads/${imgFilename}" class="receipt-img" alt="ভূমি উন্নয়ন কর রসিদ">` 
+                            ? `<img src="${directImgSrc}" class="receipt-img" alt="ভূমি উন্নয়ন কর রসিদ">` 
                             : `<embed src="/uploads/${filename}#toolbar=0&view=FitH" type="application/pdf" width="100%" height="800px" />`
                         }
                     </div>
